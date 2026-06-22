@@ -1,0 +1,61 @@
+name: Deploy calculator to GitHub Pages
+
+# Publish only when you cut a release (or trigger it by hand from the Actions tab).
+on:
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+# Permissions the GitHub Pages deploy action needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two deploys at once; let an in-flight one finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Validate the calculation engine against the real bank references BEFORE
+      # publishing — a release with broken math is blocked. These tests use plain
+      # Node (no dependencies to install).
+      - name: Validate engine
+        run: |
+          node tests/engine.test.mjs
+          node tests/fixtures.test.mjs
+
+      # "Build": the app is a single self-contained file, so we just gather what
+      # should be published into _site/ (keeps README, tests, .git etc. out of the
+      # site). If you add CSS/JS/images later, copy them here too.
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp index.html _site/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

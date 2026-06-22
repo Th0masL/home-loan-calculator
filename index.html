@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Home Loan Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --accent: #4f98a3;
+    --accent-soft: rgba(79,152,163,0.16);
+    --bg: #0f1417;
+    --bg-2: #151b1f;
+    --panel: #1a2228;
+    --panel-2: #202a31;
+    --border: #2a363d;
+    --text: #e6edf0;
+    --text-dim: #93a1a8;
+    --text-faint: #6b7980;
+    --ok: #5cb85c;
+    --ok-bg: rgba(92,184,92,0.14);
+    --warn: #e0a83c;
+    --warn-bg: rgba(224,168,60,0.14);
+    --fail: #e0604f;
+    --fail-bg: rgba(224,96,79,0.14);
+    --green: #5cb85c;
+    --amber: #e0a83c;
+    --green-tint: rgba(92,184,92,0.10);
+    --amber-tint: rgba(224,168,60,0.10);
+    --shadow: 0 2px 12px rgba(0,0,0,0.35);
+    --mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+    --ui: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  }
+  [data-theme="light"] {
+    --accent: #01696f;
+    --accent-soft: rgba(1,105,111,0.10);
+    --bg: #f4f6f7;
+    --bg-2: #eceff1;
+    --panel: #ffffff;
+    --panel-2: #f7f9fa;
+    --border: #d8dee2;
+    --text: #1b2429;
+    --text-dim: #56646b;
+    --text-faint: #8a979e;
+    --ok: #2f8f2f;
+    --ok-bg: rgba(47,143,47,0.12);
+    --warn: #b9801b;
+    --warn-bg: rgba(185,128,27,0.14);
+    --fail: #c4422f;
+    --fail-bg: rgba(196,66,47,0.12);
+    --green: #2f8f2f;
+    --amber: #b9801b;
+    --green-tint: rgba(47,143,47,0.08);
+    --amber-tint: rgba(185,128,27,0.08);
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--ui);
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  .num { font-family: var(--mono); font-feature-settings: "tnum"; }
+
+  header.appbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px;
+    background: var(--bg-2);
+    border-bottom: 1px solid var(--border);
+  }
+  header.appbar h1 { font-size: 16px; font-weight: 700; margin: 0; letter-spacing: -0.2px; }
+  header.appbar h1 .accent { color: var(--accent); }
+  .appbar-right { display: flex; align-items: center; gap: 12px; }
+  #engineStatus { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 600; }
+  #engineStatus.ok { background: var(--ok-bg); color: var(--ok); }
+  #engineStatus.fail { background: var(--fail-bg); color: var(--fail); }
+  .theme-toggle {
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 6px 12px; cursor: pointer; font-family: var(--ui); font-size: 13px;
+  }
+  .theme-toggle:hover { border-color: var(--accent); }
+
+  .layout { display: grid; grid-template-columns: 360px 1fr; gap: 0; align-items: start; }
+  .left {
+    position: sticky; top: 57px; align-self: start;
+    height: calc(100vh - 57px); overflow-y: auto;
+    background: var(--bg-2); border-right: 1px solid var(--border);
+    padding: 16px;
+  }
+  .right { padding: 16px 20px 40px; min-width: 0; }
+
+  .section { margin-bottom: 18px; }
+  .section > .section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-faint);
+    font-weight: 700; margin: 4px 0 10px;
+  }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
+  .field .row { display: flex; align-items: center; gap: 8px; }
+  input[type="number"], input[type="date"], select {
+    width: 100%; background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; padding: 7px 9px; font-family: var(--mono); font-size: 13px;
+  }
+  select { font-family: var(--ui); }
+  input[type="number"]:focus, input[type="date"]:focus, select:focus { outline: none; border-color: var(--accent); }
+  input[type="range"] { width: 100%; accent-color: var(--accent); }
+  input[type="text"] {
+    background: transparent; border: none; border-bottom: 1px dashed transparent; color: var(--text);
+    font-family: var(--ui); font-weight: 600; font-size: 13px; padding: 1px 2px; width: 130px;
+  }
+  input[type="text"]:hover { border-bottom-color: var(--border); }
+  input[type="text"]:focus { outline: none; border-bottom-color: var(--accent); }
+  .slider-val { font-family: var(--mono); font-size: 12px; color: var(--text-dim); min-width: 88px; text-align: right; }
+  .rate-breakdown { font-family: var(--mono); font-size: 11.5px; color: var(--text-dim); margin-top: 4px; }
+  .rate-breakdown b { color: var(--accent); }
+
+  .country-select { display: flex; gap: 8px; align-items: center; }
+  .country-select select { font-size: 14px; padding: 9px; }
+
+  /* Scenario cards */
+  .scenario {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+    padding: 10px 11px; margin-bottom: 9px; cursor: pointer; transition: border-color .12s;
+  }
+  .scenario.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .scenario-head { display: flex; align-items: center; gap: 7px; margin-bottom: 7px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+  .scenario-actions { margin-left: auto; display: flex; gap: 4px; }
+  .icon-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--text-dim);
+    border-radius: 6px; width: 24px; height: 24px; cursor: pointer; font-size: 12px; line-height: 1; padding: 0;
+  }
+  .icon-btn:hover { border-color: var(--accent); color: var(--text); }
+  .scenario .mini { font-size: 11px; color: var(--text-dim); }
+  .scenario .down-row { display: flex; align-items: center; gap: 7px; margin: 5px 0; }
+  .scenario .down-row .slider-val { min-width: 92px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .toggle-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--text-dim); }
+  .toggle-row input[type="number"] { width: 58px; padding: 3px 5px; font-size: 12px; }
+  .switch { position: relative; width: 32px; height: 18px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .switch .track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: .15s; }
+  .switch .track::before { content: ""; position: absolute; width: 14px; height: 14px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: .15s; }
+  .switch input:checked + .track { background: var(--accent); }
+  .switch input:checked + .track::before { transform: translateX(14px); }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 600;
+    padding: 2px 7px; border-radius: 999px; font-family: var(--mono);
+  }
+  .badge.ok { background: var(--ok-bg); color: var(--ok); }
+  .badge.warning { background: var(--warn-bg); color: var(--warn); }
+  .badge.fail { background: var(--fail-bg); color: var(--fail); }
+  .badge.neutral { background: var(--accent-soft); color: var(--accent); }
+
+  .btn {
+    background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 8px 12px;
+    font-family: var(--ui); font-weight: 600; font-size: 12.5px; cursor: pointer;
+  }
+  .btn:hover { filter: brightness(1.08); }
+  .btn.ghost { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn.ghost:hover { border-color: var(--accent); }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .preset-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .preset-row .btn { padding: 6px 9px; font-size: 11.5px; }
+
+  /* Tabs */
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 16px; flex-wrap: wrap; }
+  .tab-btn {
+    background: transparent; border: none; border-bottom: 2px solid transparent; color: var(--text-dim);
+    padding: 9px 14px; cursor: pointer; font-family: var(--ui); font-weight: 600; font-size: 13.5px;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  /* KPI cards */
+  .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .kpi {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px;
+  }
+  .kpi.hero { border-color: var(--accent); background: linear-gradient(160deg, var(--accent-soft), var(--panel)); }
+  .kpi .k-label { font-size: 11px; color: var(--text-dim); text-transform: uppercase; letter-spacing: .5px; font-weight: 600; }
+  .kpi .k-value { font-family: var(--mono); font-size: 20px; font-weight: 600; margin-top: 4px; }
+  .kpi.hero .k-value { color: var(--accent); font-size: 24px; }
+  .kpi .k-sub { font-size: 11px; color: var(--text-faint); margin-top: 2px; }
+
+  .panel-box { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 16px; }
+  .panel-box h3 { margin: 0 0 10px; font-size: 13px; font-weight: 700; }
+  .panel-box h3 .hint { font-weight: 400; color: var(--text-faint); font-size: 11px; }
+
+  .compliance-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .comp-item { background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; }
+  .comp-item .c-top { display: flex; justify-content: space-between; align-items: center; }
+  .comp-item .c-label { font-size: 11px; color: var(--text-dim); }
+  .comp-item .c-value { font-family: var(--mono); font-size: 16px; font-weight: 600; margin-top: 3px; }
+  .comp-item .c-limit { font-size: 10.5px; color: var(--text-faint); }
+
+  details.notes { margin-top: 12px; }
+  details.notes summary { cursor: pointer; font-size: 12px; color: var(--accent); font-weight: 600; }
+  details.notes ul { margin: 8px 0 0; padding-left: 18px; color: var(--text-dim); font-size: 12px; }
+  details.notes li { margin-bottom: 4px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  th, td { padding: 6px 9px; text-align: right; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  thead th { color: var(--text-dim); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .4px; position: sticky; top: 0; background: var(--panel); z-index: 1; }
+  td.num, th.num { font-family: var(--mono); }
+  .amort-wrap { max-height: 320px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+  .amort-wrap table { font-size: 12px; }
+  td.principal { color: var(--green); }
+  td.interest { color: var(--amber); }
+  tr.year-row td.principal { background: var(--green-tint); }
+  tr.year-row td.interest { background: var(--amber-tint); }
+  tr.holiday { background: var(--warn-bg); }
+  .best { background: var(--accent-soft); font-weight: 700; }
+  .best::after { content: " ★"; color: var(--accent); font-size: 10px; }
+
+  .cmp-table th, .cmp-table td { text-align: right; }
+  .cmp-table th:first-child, .cmp-table td:first-child { text-align: left; color: var(--text-dim); font-weight: 500; }
+  .cmp-table thead th { background: var(--panel); }
+  .sc-colorhead { display: inline-flex; align-items: center; gap: 6px; }
+
+  /* Horizon pills */
+  .pills { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+  .pill { background: var(--panel); border: 1px solid var(--border); color: var(--text-dim); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-family: var(--mono); font-size: 13px; }
+  .pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .verdict { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 18px; margin-top: 16px; }
+  .verdict .big { font-family: var(--mono); font-size: 34px; font-weight: 700; }
+  .verdict .big.keep { color: var(--green); }
+  .verdict .big.sell { color: var(--amber); }
+  .verdict .sentence { font-size: 15px; margin: 8px 0 4px; }
+  .verdict .breakeven { font-size: 12.5px; color: var(--text-dim); margin-top: 6px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .stat-line { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
+  .stat-line .v { font-family: var(--mono); font-weight: 600; }
+
+  .warn-inline { color: var(--warn); font-size: 12px; margin-top: 6px; }
+  .disclaimer { margin-top: 28px; padding: 14px 16px; background: var(--panel-2); border: 1px solid var(--border); border-left: 3px solid var(--accent); border-radius: 8px; font-size: 11.5px; color: var(--text-dim); line-height: 1.5; }
+  .app-footer { margin-top: 14px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--text-dim); }
+  .app-footer .privacy { display: inline-flex; align-items: center; gap: 7px; }
+  .app-footer .privacy b { color: var(--text); font-weight: 600; }
+  .app-footer a.repo-link { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); text-decoration: none; font-weight: 600; border: 1px solid var(--border); border-radius: 8px; padding: 6px 11px; }
+  .app-footer a.repo-link:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .app-footer svg { width: 15px; height: 15px; fill: currentColor; flex: none; }
+
+  /* Glossary modal */
+  .appbar-right { flex-wrap: wrap; justify-content: flex-end; }
+  .comp-item { cursor: help; }
+  .modal-overlay {
+    position: fixed; inset: 0; z-index: 100; background: rgba(0,0,0,0.55);
+    display: flex; align-items: flex-start; justify-content: center; padding: 5vh 16px;
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  }
+  .modal-overlay[hidden] { display: none; }
+  .modal {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+    width: 100%; max-width: 760px; max-height: 88vh; display: flex; flex-direction: column;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.45);
+  }
+  .modal-head {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+  }
+  .modal-head h2 { margin: 0; font-size: 17px; font-weight: 700; }
+  .modal-head .sub { font-size: 12px; color: var(--text-dim); font-weight: 400; margin-top: 3px; }
+  .modal-close {
+    background: var(--panel-2); border: 1px solid var(--border); color: var(--text);
+    border-radius: 8px; width: 32px; height: 32px; font-size: 16px; cursor: pointer; flex: none; line-height: 1;
+  }
+  .modal-close:hover { border-color: var(--accent); }
+  .modal-body { padding: 4px 20px 20px; overflow-y: auto; }
+  .gloss-section { margin-top: 18px; }
+  .gloss-section > h3 {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--accent);
+    font-weight: 700; margin: 0 0 6px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+  }
+  .gloss-item { padding: 7px 0; border-bottom: 1px dashed var(--border); }
+  .gloss-item:last-child { border-bottom: none; }
+  .gloss-term { font-weight: 700; color: var(--text); font-size: 13.5px; }
+  .gloss-term .alt { font-weight: 400; color: var(--text-faint); font-size: 12px; }
+  .gloss-def { margin: 3px 0 0; font-size: 13px; color: var(--text-dim); line-height: 1.5; }
+  .gloss-def .eg { color: var(--text-faint); }
+  .gloss-def .eg b { color: var(--accent); font-weight: 600; }
+
+  @media (max-width: 880px) {
+    .layout { grid-template-columns: 1fr; }
+    .left { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="appbar">
+  <h1>🏠 <span class="accent">Home Loan</span> Calculator</h1>
+  <div class="appbar-right">
+    <span id="engineStatus" class="ok">engine: checking…</span>
+    <button class="theme-toggle" id="glossaryBtn" title="Plain-English explanation of every term on this page">❓ Glossary</button>
+    <button class="theme-toggle" id="shareBtn" title="Copy a shareable/bookmarkable link containing all your inputs">🔗 Copy link</button>
+    <button class="theme-toggle" id="resetBtn" title="Clear saved data and reset everything to defaults">↺ Reset</button>
+    <button class="theme-toggle" id="themeToggle">☀️ Light</button>
+  </div>
+</header>
+
+<div class="layout">
+  <!-- LEFT INPUT PANEL -->
+  <aside class="left">
+    <div class="section">
+      <div class="section-title">Country</div>
+      <div class="country-select">
+        <select id="countrySelect"></select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">New home</div>
+      <div class="field">
+        <label>Property price (<span class="cur"></span>)</label>
+        <div class="row">
+          <input type="range" id="propertyPriceRange" min="20000" max="1500000" step="1000" />
+          <input type="number" id="propertyPrice" step="1000" style="width:110px" />
+        </div>
+      </div>
+      <div class="field">
+        <label>Own cash available (<span class="cur"></span>)</label>
+        <input type="number" id="ownCash" step="500" />
+      </div>
+      <div class="field">
+        <label>Loan term (years)</label>
+        <div class="row">
+          <input type="range" id="termYearsRange" min="1" step="1" />
+          <span class="slider-val" id="termYearsVal"></span>
+        </div>
+      </div>
+      <div class="field">
+        <label id="benchmarkLabel">Benchmark rate %</label>
+        <input type="number" id="benchmarkRatePct" step="0.05" />
+      </div>
+      <div class="field">
+        <label>Bank margin %</label>
+        <input type="number" id="bankMarginPct" step="0.05" />
+        <div class="rate-breakdown" id="rateBreakdown"></div>
+      </div>
+      <div class="field">
+        <label>Net monthly income (<span class="cur"></span>)</label>
+        <input type="number" id="netMonthlyIncome" step="100" />
+      </div>
+      <div class="field">
+        <label>Other monthly debts (<span class="cur"></span>)</label>
+        <input type="number" id="otherMonthlyDebts" step="50" />
+      </div>
+      <div class="field">
+        <label>Loan start date</label>
+        <input type="date" id="loanStartDate" />
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Scenarios</div>
+      <div id="scenarioList"></div>
+      <button class="btn ghost" id="addScenarioBtn" style="width:100%;margin-top:4px">+ Add scenario</button>
+      <div class="preset-row" id="presetRow"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Existing apartment</div>
+      <div class="field">
+        <label>Current apartment value (<span class="cur"></span>)</label>
+        <input type="number" id="apartmentValue" step="1000" />
+      </div>
+      <div class="field">
+        <label>Net monthly rent profit (<span class="cur"></span>)</label>
+        <input type="number" id="rentProfit" step="25" />
+        <div class="warn-inline" id="rentWarn" style="display:none">Negative net rent — apartment costs more than it earns.</div>
+      </div>
+      <div class="field">
+        <label>Annual appreciation %</label>
+        <input type="number" id="appreciationPct" step="0.1" />
+      </div>
+      <div class="panel-box" style="margin-top:6px;padding:10px 12px">
+        <div class="mini" style="font-size:11px;color:var(--text-faint);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px;font-weight:700">Future value</div>
+        <div id="futureValues"></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT RESULT PANEL -->
+  <main class="right">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="mortgage">Mortgage</button>
+      <button class="tab-btn" data-tab="comparison">Scenario comparison</button>
+      <button class="tab-btn" data-tab="sellkeep">Sell vs keep</button>
+      <button class="tab-btn" data-tab="extra">Extra repayments</button>
+    </div>
+
+    <section class="tab-panel active" id="tab-mortgage"></section>
+    <section class="tab-panel" id="tab-comparison"></section>
+    <section class="tab-panel" id="tab-sellkeep"></section>
+    <section class="tab-panel" id="tab-extra"></section>
+
+    <div class="disclaimer">
+      <strong>For planning purposes only.</strong> All calculations assume a fixed interest rate and constant monthly income.
+      Actual loan terms depend on your bank, credit profile, and applicable regulations. Verify all figures with your bank
+      and a qualified financial advisor.
+    </div>
+
+    <footer class="app-footer">
+      <span class="privacy">🔒&nbsp;<span><b>Runs 100% in your browser.</b> No backend, no tracking — your figures never leave your device. Works fully offline.</span></span>
+      <a class="repo-link" href="https://github.com/Th0masL/home-loan-calculator" target="_blank" rel="noopener noreferrer">
+        <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        View source on GitHub
+      </a>
+    </footer>
+  </main>
+</div>
+
+<!-- GLOSSARY MODAL -->
+<div class="modal-overlay" id="glossaryModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="glossaryTitle">
+    <div class="modal-head">
+      <div>
+        <h2 id="glossaryTitle">📖 Plain-English glossary</h2>
+        <div class="sub">Every term on this page, explained simply — with small examples. Numbers shown are just illustrations.</div>
+      </div>
+      <button class="modal-close" id="glossaryClose" aria-label="Close glossary">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <div class="gloss-section">
+        <h3>Getting started</h3>
+        <div class="gloss-item"><span class="gloss-term">Property price <span class="alt">(deal amount)</span></span>
+          <p class="gloss-def">The full price of the home you want to buy.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Down payment</span>
+          <p class="gloss-def">The cash you pay upfront from your own savings. The bank lends the rest.
+            <span class="eg">E.g. on a <b>€200,000</b> home with a 15% down payment you pay <b>€30,000</b> yourself and borrow <b>€170,000</b>.</span></p></div>
+        <div class="gloss-item"><span class="gloss-term">Loan amount <span class="alt">(principal)</span></span>
+          <p class="gloss-def">The money the bank actually lends you — the price minus your down payment. This is what you pay back, plus interest.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Loan term</span>
+          <p class="gloss-def">How many years you have to repay the loan. A longer term means smaller monthly payments but more total interest.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Monthly payment</span>
+          <p class="gloss-def">The fixed amount you pay the bank every month.</p></div>
+      </div>
+
+      <div class="gloss-section">
+        <h3>How the interest works</h3>
+        <div class="gloss-item"><span class="gloss-term">Interest rate</span>
+          <p class="gloss-def">The yearly cost of borrowing, as a percentage of what you still owe.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Euribor <span class="alt">(benchmark rate)</span></span>
+          <p class="gloss-def">A Europe-wide "base" interest rate that banks build their loans on. It rises and falls over time. "6-month Euribor" is the version that resets every 6 months.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Bank margin</span>
+          <p class="gloss-def">The bank's fixed mark-up added on top of Euribor. It's set in your contract and doesn't change over the life of the loan.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Contract rate</span>
+          <p class="gloss-def">What you actually pay = Euribor + margin.
+            <span class="eg">E.g. <b>2.4%</b> Euribor + <b>1.8%</b> margin = <b>4.2%</b>.</span></p></div>
+        <div class="gloss-item"><span class="gloss-term">Fixed vs floating rate</span>
+          <p class="gloss-def">With a <em>floating</em> rate your payment changes when Euribor moves. With a <em>fixed</em> rate it's locked for a period — usually a little more expensive, but predictable. This tool holds one rate constant; to compare, just type each rate in turn.</p></div>
+      </div>
+
+      <div class="gloss-section">
+        <h3>The payment schedule</h3>
+        <div class="gloss-item"><span class="gloss-term">Annuity</span>
+          <p class="gloss-def">The most common loan type — you pay the <em>same total amount</em> every month for the whole term.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Principal vs interest</span>
+          <p class="gloss-def">Each monthly payment splits in two. The <span style="color:var(--amber)">interest</span> part is the bank's fee for that month; the <span style="color:var(--green)">principal</span> part actually reduces your debt. Early on most of the payment is interest; later it's mostly principal.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Amortization schedule</span>
+          <p class="gloss-def">The month-by-month table showing how your loan shrinks to zero.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Balance</span>
+          <p class="gloss-def">How much you still owe. The "opening balance" is what you owe at the start of a given month.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Total interest</span>
+          <p class="gloss-def">All the interest you'll pay across the whole loan — the true extra cost of borrowing, on top of the price.</p></div>
+      </div>
+
+      <div class="gloss-section">
+        <h3>Can you get the loan? (bank rules)</h3>
+        <div class="gloss-item"><span class="gloss-term">LTV — Loan-to-Value</span>
+          <p class="gloss-def">Your loan as a percentage of the property price. Lower is safer for the bank.
+            <span class="eg">E.g. borrow <b>€170,000</b> on a <b>€200,000</b> home = <b>85% LTV</b>.</span> Estonia usually caps this at 85% (so you need at least 15% down).</p></div>
+        <div class="gloss-item"><span class="gloss-term">DSTI — Debt Service-to-Income</span>
+          <p class="gloss-def">How much of your monthly take-home income goes to loan payments.
+            <span class="eg">E.g. <b>€840</b> of payments on <b>€2,800</b> income = <b>30%</b>.</span> Estonia caps this at 50%.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Stress test <span class="alt">(stress rate / stress monthly)</span></span>
+          <p class="gloss-def">A safety check: the bank confirms you could still afford the loan if interest rates jumped. Estonia tests you at <b>6%</b> (or your rate, whichever is higher), even if your real rate is lower today. "Stress monthly" is that higher what-if payment.</p></div>
+        <div class="gloss-item"><span class="gloss-term">State guarantee <span class="alt">(KredEx / EIS in Estonia)</span></span>
+          <p class="gloss-def">A government-backed scheme that lets eligible buyers borrow with a smaller down payment (e.g. 10% instead of 15%).</p></div>
+      </div>
+
+      <div class="gloss-section">
+        <h3>Paying it off your way</h3>
+        <div class="gloss-item"><span class="gloss-term">Repayment holiday</span>
+          <p class="gloss-def">A period at the very start where you pay <em>only the interest</em>, not the principal. Your monthly payment is lower for a while, but the loan costs more in total because the debt isn't shrinking yet.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Extra repayment <span class="alt">(prepayment)</span></span>
+          <p class="gloss-def">Putting extra money toward the loan to pay it off faster and save on interest.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Shorten term vs reduce payment</span>
+          <p class="gloss-def">Two ways to use an extra repayment. <em>Shorten term</em>: keep paying the same monthly amount but finish the loan earlier. <em>Reduce payment</em>: keep the same end date but lower your monthly payment.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Early repayment fee</span>
+          <p class="gloss-def">A charge some banks apply when you pay extra ahead of schedule (e.g. 1% of the extra amount).</p></div>
+      </div>
+
+      <div class="gloss-section">
+        <h3>Keep or sell your apartment</h3>
+        <div class="gloss-item"><span class="gloss-term">Appreciation</span>
+          <p class="gloss-def">How much a property gains in value per year.
+            <span class="eg">E.g. <b>3%/year</b> turns a <b>€120,000</b> flat into about <b>€139,000</b> in 5 years.</span></p></div>
+        <div class="gloss-item"><span class="gloss-term">Net monthly rent profit</span>
+          <p class="gloss-def">The rent you collect minus all the costs of owning and renting it out — you enter the final net figure.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Keep advantage</span>
+          <p class="gloss-def">The bottom line of the keep-vs-sell comparison: how much better off you'd be <em>keeping</em> the apartment (rent + value growth) versus <em>selling</em> it to put more cash down on the new home (which means less interest and less remaining debt). Positive = keeping wins; negative = selling wins.</p></div>
+        <div class="gloss-item"><span class="gloss-term">Break-even rent / appreciation</span>
+          <p class="gloss-def">The minimum monthly rent, or yearly value growth, the apartment would need for keeping it to be worthwhile.</p></div>
+      </div>
+
+      <div class="gloss-section">
+        <h3>Upfront costs</h3>
+        <div class="gloss-item"><span class="gloss-term">One-time costs</span>
+          <p class="gloss-def">Fees paid once when buying — notary, state fee, property appraisal, and home insurance. They add to the cash you need on day one, on top of the down payment.</p></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================= -->
+<!-- ENGINE: pure country config + mortgage math + compliance.     -->
+<!-- This block is self-contained (no DOM) and is extracted by     -->
+<!-- tests/engine.test.mjs for validation against Swedbank data.   -->
+<!-- ============================================================= -->
+<script id="engine">
+/* ===== ENGINE START ===== */
+
+/* ---- Country configs ---- */
+const Estonia = {
+  code: 'EE', name: 'Estonia', flag: '🇪🇪', currency: 'EUR', currencySymbol: '€',
+  maxLTV: 0.85, maxLTVWithGuarantee: 0.90, guaranteeName: 'KredEx/EIS',
+  maxDSTI: 0.50, stressRateFloor: 6.0, hasStressTest: true,
+  maxTermYears: 30, defaultTermYears: 20,
+  defaultBenchmarkRatePct: 2.4, defaultMarginPct: 1.8, benchmarkRateLabel: '6-month Euribor',
+  defaultEarlyRepaymentFeePct: 1.0,
+  csvDelimiter: ';', csvThousandsSep: ' ', csvDecimalSep: '.', dateFormat: 'DD.MM.YYYY',
+  regulatoryNotes: [
+    'LTV ≤ 85% standard (90% with KredEx/EIS guarantee) — Eesti Pank',
+    'DSTI ≤ 50% of net monthly income — Eesti Pank',
+    'Stress test: affordability assessed at max(contract rate, 6%) — Eesti Pank 2024',
+    'Maximum loan maturity: 30 years — Eesti Pank',
+  ],
+};
+
+const Finland = {
+  code: 'FI', name: 'Finland', flag: '🇫🇮', currency: 'EUR', currencySymbol: '€',
+  maxLTV: 0.90, maxLTVWithGuarantee: 0.95, guaranteeName: 'ASP',
+  maxDSTI: 0.60, stressRateFloor: 6.0, hasStressTest: true,
+  maxTermYears: 30, defaultTermYears: 25,
+  defaultBenchmarkRatePct: 2.4, defaultMarginPct: 0.7, benchmarkRateLabel: '12-month Euribor',
+  defaultEarlyRepaymentFeePct: 0,
+  csvDelimiter: ';', csvThousandsSep: ' ', csvDecimalSep: ',', dateFormat: 'DD.MM.YYYY',
+  regulatoryNotes: [
+    'LTV ≤ 90% standard (95% with ASP first-home scheme) — Finnish FSA',
+    'No statutory DSTI limit; 60% is a common bank guideline',
+    'Maximum loan maturity: 30 years',
+  ],
+};
+
+const COUNTRIES = [Estonia, Finland];
+
+/* ---- Numeric helpers ---- */
+function round2(x) { return Math.round((x + Number.EPSILON) * 100) / 100; }
+
+/* Annuity monthly payment. Returned UNROUNDED — round only for display.
+   Matches Swedbank: the precise payment is what drives principal/interest split. */
+function monthlyPayment(principal, annualRatePct, termMonths) {
+  if (termMonths <= 0 || principal <= 0) return 0;
+  const r = annualRatePct / 100 / 12;
+  if (r === 0) return principal / termMonths;
+  return principal * r / (1 - Math.pow(1 + r, -termMonths));
+}
+
+function addMonths(date, n) {
+  const d = new Date(date.getTime());
+  const day = d.getDate();
+  d.setDate(1);
+  d.setMonth(d.getMonth() + n);
+  const daysInMonth = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+  d.setDate(Math.min(day, daysInMonth));
+  return d;
+}
+
+function formatDate(date, fmt) {
+  if (!date) return '';
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const yyyy = String(date.getFullYear());
+  return (fmt || 'DD.MM.YYYY').replace('DD', dd).replace('MM', mm).replace('YYYY', yyyy);
+}
+
+/* Full month-by-month amortization. Pure. Balance tracked at full precision. */
+function amortize(principal, annualRatePct, termMonths, holidayMonths, extraPayments, strategy, feePct, startDate, dateFormat) {
+  const r = annualRatePct / 100 / 12;
+  let balance = principal;
+  holidayMonths = holidayMonths || 0;
+  const extraMap = {};
+  (extraPayments || []).forEach(e => { extraMap[e.monthIndex] = (extraMap[e.monthIndex] || 0) + e.amount; });
+
+  const activeTermMonths = Math.max(1, termMonths - holidayMonths);
+  let payment = monthlyPayment(principal, annualRatePct, activeTermMonths);
+  const rows = [];
+
+  for (let month = 1; month <= termMonths; month++) {
+    if (balance <= 0.005) break;
+    const opening = balance;
+    let interest, principalPart, isHoliday;
+
+    if (month <= holidayMonths) {
+      interest = balance * r;
+      principalPart = 0;
+      isHoliday = true;
+    } else {
+      if (month === holidayMonths + 1) {
+        payment = monthlyPayment(balance, annualRatePct, termMonths - month + 1);
+      }
+      interest = balance * r;
+      principalPart = Math.min(payment - interest, balance);
+      if (principalPart < 0) principalPart = 0;
+      isHoliday = false;
+    }
+
+    let extra = extraMap[month] || 0;
+    extra = Math.max(0, Math.min(extra, balance - principalPart));
+    const fee = extra * (feePct || 0) / 100;
+    const closing = balance - principalPart - extra;
+
+    rows.push({
+      monthIndex: month,
+      date: startDate ? formatDate(addMonths(startDate, month), dateFormat) : '',
+      openingBalance: opening,
+      scheduledPayment: interest + principalPart,
+      interestPayment: interest,
+      principalPayment: principalPart,
+      extraPayment: extra,
+      prepaymentFee: fee,
+      closingBalance: closing,
+      isHolidayMonth: isHoliday,
+    });
+
+    balance = closing;
+
+    if (strategy === 'reduce_payment' && extra > 0) {
+      const remaining = termMonths - month;
+      if (remaining > 0) payment = monthlyPayment(balance, annualRatePct, remaining);
+    }
+    if (balance <= 0.005) break;
+  }
+  return rows;
+}
+
+/* Aggregate totals from a schedule. */
+function scheduleTotals(rows) {
+  let interest = 0, principal = 0, extra = 0, fees = 0, scheduled = 0;
+  for (const row of rows) {
+    interest += row.interestPayment; principal += row.principalPayment;
+    extra += row.extraPayment; fees += row.prepaymentFee; scheduled += row.scheduledPayment;
+  }
+  const last = rows[rows.length - 1];
+  return {
+    totalInterest: interest, totalPrincipal: principal, totalExtra: extra, totalFees: fees,
+    totalPaid: scheduled + extra + fees,
+    months: rows.length,
+    payoffMonth: last ? last.monthIndex : 0,
+    payoffDate: last ? last.date : '',
+  };
+}
+
+/* Cumulative figures up to (and including) a given month. */
+function cumulativeAt(rows, months) {
+  let paid = 0, interest = 0, principalPaid = 0, remaining = rows.length ? rows[0].openingBalance : 0;
+  let reached = false;
+  for (const row of rows) {
+    if (row.monthIndex > months) break;
+    paid += row.scheduledPayment + row.extraPayment + row.prepaymentFee;
+    interest += row.interestPayment;
+    principalPaid += row.principalPayment + row.extraPayment;
+    remaining = row.closingBalance;
+    reached = true;
+  }
+  if (!reached) remaining = rows.length ? rows[0].openingBalance : 0;
+  if (months >= rows.length && rows.length) remaining = rows[rows.length - 1].closingBalance;
+  return { paid, interest, principalPaid, remaining };
+}
+
+/* Build extra-payment schedule from a prepayment plan, aligned to calendar month. */
+function loanMonthForCalendar(startMonth0, year, payMonth) {
+  // loan month m has payment date = start + m months; its calendar month is (startMonth0 + m) % 12.
+  let off = (((payMonth - 1) - startMonth0) % 12 + 12) % 12;
+  if (off === 0) off = 12;
+  return (year - 1) * 12 + off;
+}
+function buildExtraPayments(plan, termMonths, startDate) {
+  if (!plan || !plan.enabled) return [];
+  const out = [];
+  const startMonth0 = startDate ? startDate.getMonth() : 11;
+  const payMonth = plan.paymentMonth || 12;
+  if (plan.mode === 'custom') {
+    (plan.customSchedule || []).forEach(item => {
+      if (!item || !item.amount) return;
+      const mi = loanMonthForCalendar(startMonth0, item.year, payMonth);
+      if (mi >= 1 && mi <= termMonths) out.push({ monthIndex: mi, amount: item.amount });
+    });
+  } else {
+    const years = Math.ceil(termMonths / 12);
+    for (let y = 1; y <= years; y++) {
+      const mi = loanMonthForCalendar(startMonth0, y, payMonth);
+      if (mi >= 1 && mi <= termMonths && plan.fixedYearlyAmount > 0) out.push({ monthIndex: mi, amount: plan.fixedYearlyAmount });
+    }
+  }
+  return out;
+}
+
+/* ---- Compliance checks. Thresholds passed in from the active country config. ---- */
+function checkLTV(loanAmount, propertyValue, maxLTV, guaranteeMaxLTV, useGuarantee) {
+  const value = propertyValue > 0 ? loanAmount / propertyValue : 0;
+  const limit = (useGuarantee && guaranteeMaxLTV) ? guaranteeMaxLTV : maxLTV;
+  let status = 'ok';
+  if (value > limit + 1e-9) status = 'fail';
+  else if (value > limit - 0.03) status = 'warning';
+  return { status, value, limit, label: 'LTV' };
+}
+function checkDSTI(monthlyPaymentAmt, otherDebts, netIncome, maxDSTI) {
+  const value = netIncome > 0 ? (monthlyPaymentAmt + otherDebts) / netIncome : Infinity;
+  let status = 'ok';
+  if (!(netIncome > 0)) status = 'warning';
+  else if (value > maxDSTI + 1e-9) status = 'fail';
+  else if (value > maxDSTI - 0.05) status = 'warning';
+  return { status, value, limit: maxDSTI, label: 'DSTI' };
+}
+function checkStress(loanAmount, annualRatePct, termMonths, otherDebts, netIncome, stressFloor, maxDSTI, hasStressTest) {
+  const stressRate = (hasStressTest === false) ? annualRatePct : Math.max(annualRatePct, stressFloor);
+  const pay = monthlyPayment(loanAmount, stressRate, termMonths);
+  const value = netIncome > 0 ? (pay + otherDebts) / netIncome : Infinity;
+  let status = 'ok';
+  if (!(netIncome > 0)) status = 'warning';
+  else if (value > maxDSTI + 1e-9) status = 'fail';
+  else if (value > maxDSTI - 0.05) status = 'warning';
+  return { status, value, limit: maxDSTI, label: 'Stress DSTI', stressPayment: pay, stressRate };
+}
+
+/* Expose for the node test harness (no effect in the browser). */
+if (typeof globalThis !== 'undefined') {
+  globalThis.LoanEngine = {
+    Estonia, Finland, COUNTRIES, round2, monthlyPayment, amortize, scheduleTotals,
+    cumulativeAt, buildExtraPayments, loanMonthForCalendar, addMonths, formatDate,
+    checkLTV, checkDSTI, checkStress,
+  };
+}
+/* ===== ENGINE END ===== */
+</script>
+
+<!-- ============================================================= -->
+<!-- APP: state, rendering, event wiring. Uses the engine globals. -->
+<!-- ============================================================= -->
+<script>
+(function () {
+  'use strict';
+
+  const SC_COLORS = ['#4f98a3', '#d4a843', '#5cb85c', '#e87fa6', '#7a6fd4', '#d97a4f', '#4f9ed9', '#9aa0a6'];
+  let scCounter = 0;
+  const uid = () => 'sc' + (++scCounter);
+
+  function todayISO() {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
+
+  function defaultPlan(country) {
+    return {
+      enabled: false, mode: 'fixed_yearly', fixedYearlyAmount: 20000, paymentMonth: 12,
+      customSchedule: [], strategy: 'shorten_term', feePct: country.defaultEarlyRepaymentFeePct,
+    };
+  }
+
+  function defaultScenarios(country) {
+    const minPct = Math.round((1 - country.maxLTV) * 100);
+    const minGuarPct = country.maxLTVWithGuarantee ? Math.round((1 - country.maxLTVWithGuarantee) * 100) : minPct;
+    return [
+      { id: uid(), name: `Standard (${minPct}%)`, downPaymentPct: minPct, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
+      { id: uid(), name: `${country.guaranteeName || 'Guarantee'} (${minGuarPct}%)`, downPaymentPct: minGuarPct, useGuaranteeMode: true, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
+      { id: uid(), name: 'Larger down (20%)', downPaymentPct: 20, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
+    ];
+  }
+
+  const state = {
+    countryCode: 'EE',
+    theme: localStorage.getItem('hlc-theme') || 'dark',
+    propertyPrice: 250000,
+    ownCash: 40000,
+    termYears: 20,
+    benchmarkRatePct: 2.4,
+    bankMarginPct: 1.8,
+    netMonthlyIncome: 3500,
+    otherMonthlyDebts: 0,
+    loanStartDate: todayISO(),
+    costs: { notary: 200, stateFee: 260, appraisal: 300, insurancePerYear: 400 },
+    scenarios: [],
+    activeScenarioId: null,
+    apartment: { currentValue: 120000, netMonthlyRentProfit: 400, annualAppreciationPct: 3.0 },
+    horizonYears: 10,
+  };
+
+  function activeCountry() { return COUNTRIES.find(c => c.code === state.countryCode) || COUNTRIES[0]; }
+  function activeScenario() { return state.scenarios.find(s => s.id === state.activeScenarioId) || state.scenarios[0]; }
+  function contractRate() { return round2(state.benchmarkRatePct + state.bankMarginPct); }
+  function stressRate() {
+    const c = activeCountry();
+    return c.hasStressTest ? Math.max(contractRate(), c.stressRateFloor) : contractRate();
+  }
+  function termMonths() { return Math.round(state.termYears * 12); }
+  function startDateObj() { return new Date(state.loanStartDate + 'T00:00:00'); }
+
+  /* ---- formatting ---- */
+  function fmtNum(v, decimals) {
+    const c = activeCountry();
+    decimals = decimals == null ? 2 : decimals;
+    const neg = v < 0;
+    const fixed = Math.abs(v).toFixed(decimals);
+    let [intPart, dec] = fixed.split('.');
+    intPart = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, c.csvThousandsSep);
+    let out = dec != null ? intPart + c.csvDecimalSep + dec : intPart;
+    return (neg ? '-' : '') + out;
+  }
+  function money(v, decimals) { return activeCountry().currencySymbol + ' ' + fmtNum(v, decimals == null ? 0 : decimals); }
+  function pct(v, decimals) { return (v * 100).toFixed(decimals == null ? 1 : decimals) + '%'; }
+
+  /* ---- per-scenario computation ---- */
+  function computeScenario(sc) {
+    const c = activeCountry();
+    const tm = termMonths();
+    const rate = contractRate();
+    const start = startDateObj();
+    const downPayment = round2(state.propertyPrice * sc.downPaymentPct / 100);
+    const loanAmount = Math.max(0, round2(state.propertyPrice - downPayment));
+    const holiday = Math.min(sc.repaymentHolidayMonths || 0, tm - 1);
+
+    const baseRows = amortize(loanAmount, rate, tm, holiday, [], 'shorten_term', 0, start, c.dateFormat);
+    const noHolidayRows = amortize(loanAmount, rate, tm, 0, [], 'shorten_term', 0, start, c.dateFormat);
+    const plan = sc.prepaymentPlan;
+    const extras = buildExtraPayments(plan, tm, start);
+    const rows = amortize(loanAmount, rate, tm, holiday, extras, plan ? plan.strategy : 'shorten_term', plan ? plan.feePct : 0, start, c.dateFormat);
+
+    const monthly = round2(monthlyPayment(loanAmount, rate, tm - holiday));
+    const totals = scheduleTotals(rows);
+    const baseTotals = scheduleTotals(baseRows);
+    const noHolidayTotals = scheduleTotals(noHolidayRows);
+
+    const ltv = checkLTV(loanAmount, state.propertyPrice, c.maxLTV, c.maxLTVWithGuarantee, sc.useGuaranteeMode);
+    const dsti = checkDSTI(monthly, state.otherMonthlyDebts, state.netMonthlyIncome, c.maxDSTI);
+    const stress = checkStress(loanAmount, rate, tm - holiday, state.otherMonthlyDebts, state.netMonthlyIncome, c.stressRateFloor, c.maxDSTI, c.hasStressTest);
+
+    const overallStatus = [ltv, dsti, stress].some(f => f.status === 'fail') ? 'fail'
+      : [ltv, dsti, stress].some(f => f.status === 'warning') ? 'warning' : 'ok';
+
+    return {
+      sc, downPayment, loanAmount, holiday, monthly, rows, baseRows, noHolidayRows,
+      totals, baseTotals, noHolidayTotals, ltv, dsti, stress, overallStatus,
+      hasPrepay: !!(plan && plan.enabled && extras.length),
+      holidayExtraInterest: baseTotals.totalInterest - noHolidayTotals.totalInterest,
+    };
+  }
+
+  function scColor(sc) {
+    const i = state.scenarios.findIndex(s => s.id === sc.id);
+    return SC_COLORS[i % SC_COLORS.length];
+  }
+
+  /* =============================== RENDER =============================== */
+  function render() {
+    syncLeftPanel();
+    renderScenarioList();
+    renderMortgageTab();
+    renderComparisonTab();
+    renderSellKeepTab();
+    renderExtraTab();
+    save();
+  }
+
+  function syncLeftPanel() {
+    const c = activeCountry();
+    document.documentElement.setAttribute('data-theme', state.theme);
+    document.getElementById('themeToggle').textContent = state.theme === 'dark' ? '☀️ Light' : '🌙 Dark';
+    document.querySelectorAll('.cur').forEach(el => el.textContent = c.currencySymbol);
+
+    setVal('propertyPrice', state.propertyPrice);
+    setVal('propertyPriceRange', state.propertyPrice);
+    setVal('ownCash', state.ownCash);
+    const termRange = document.getElementById('termYearsRange');
+    termRange.max = c.maxTermYears;
+    setVal('termYearsRange', state.termYears);
+    document.getElementById('termYearsVal').textContent = state.termYears + ' yr';
+    setVal('benchmarkRatePct', state.benchmarkRatePct);
+    setVal('bankMarginPct', state.bankMarginPct);
+    setVal('netMonthlyIncome', state.netMonthlyIncome);
+    setVal('otherMonthlyDebts', state.otherMonthlyDebts);
+    setVal('loanStartDate', state.loanStartDate);
+    document.getElementById('benchmarkLabel').textContent = c.benchmarkRateLabel + ' %';
+    document.getElementById('rateBreakdown').innerHTML =
+      `${c.benchmarkRateLabel} ${state.benchmarkRatePct.toFixed(2)}% + Margin ${state.bankMarginPct.toFixed(2)}% = <b>${contractRate().toFixed(2)}%</b>`;
+
+    setVal('apartmentValue', state.apartment.currentValue);
+    setVal('rentProfit', state.apartment.netMonthlyRentProfit);
+    setVal('appreciationPct', state.apartment.annualAppreciationPct);
+    document.getElementById('rentWarn').style.display = state.apartment.netMonthlyRentProfit < 0 ? 'block' : 'none';
+
+    // future values
+    const horizons = [2, 5, 10, 15, 20];
+    document.getElementById('futureValues').innerHTML = horizons.map(y => {
+      const fv = state.apartment.currentValue * Math.pow(1 + state.apartment.annualAppreciationPct / 100, y);
+      return `<div class="stat-line" style="padding:3px 0"><span>${y} yr</span><span class="v num">${money(fv)}</span></div>`;
+    }).join('');
+
+    // country select
+    const sel = document.getElementById('countrySelect');
+    if (sel.options.length !== COUNTRIES.length) {
+      sel.innerHTML = COUNTRIES.map(c2 => `<option value="${c2.code}">${c2.flag} ${c2.name}</option>`).join('');
+    }
+    sel.value = state.countryCode;
+
+    // presets
+    const minPct = Math.round((1 - c.maxLTV) * 100);
+    const minGuarPct = c.maxLTVWithGuarantee ? Math.round((1 - c.maxLTVWithGuarantee) * 100) : minPct;
+    document.getElementById('presetRow').innerHTML = `
+      <button class="btn ghost" data-preset="min" data-pct="${minPct}">Min ${minPct}%</button>
+      <button class="btn ghost" data-preset="guar" data-pct="${minGuarPct}">Min ${minGuarPct}% + ${c.guaranteeName || 'guarantee'}</button>
+      <button class="btn ghost" data-preset="p20" data-pct="20">20%</button>
+      <button class="btn ghost" data-preset="p30" data-pct="30">30%</button>`;
+  }
+
+  function setVal(id, v) { const el = document.getElementById(id); if (el && document.activeElement !== el) el.value = v; }
+
+  function renderScenarioList() {
+    const c = activeCountry();
+    const minPct = Math.round((1 - c.maxLTV) * 100);
+    const list = document.getElementById('scenarioList');
+    list.innerHTML = state.scenarios.map(sc => {
+      const r = computeScenario(sc);
+      const color = scColor(sc);
+      const active = sc.id === state.activeScenarioId;
+      const guarBadge = sc.useGuaranteeMode ? `<span class="badge neutral">${c.guaranteeName || 'Guarantee'}</span>` : '';
+      const plan = sc.prepaymentPlan;
+      return `
+      <div class="scenario ${active ? 'active' : ''}" data-sc="${sc.id}">
+        <div class="scenario-head">
+          <span class="dot" style="background:${color}"></span>
+          <input type="text" class="sc-name" data-sc="${sc.id}" value="${escapeAttr(sc.name)}" />
+          <span class="scenario-actions">
+            <button class="icon-btn" data-act="clone" data-sc="${sc.id}" title="Clone">⧉</button>
+            <button class="icon-btn" data-act="delete" data-sc="${sc.id}" title="Delete" ${state.scenarios.length <= 3 ? 'disabled' : ''}>✕</button>
+          </span>
+        </div>
+        <div class="down-row">
+          <input type="range" class="sc-down" data-sc="${sc.id}" min="${minPct}" max="50" step="1" value="${sc.downPaymentPct}" />
+          <span class="slider-val">${sc.downPaymentPct}% · ${money(r.downPayment)}</span>
+        </div>
+        <div class="badges">
+          <span class="badge ${r.ltv.status}">LTV ${pct(r.ltv.value)}</span>
+          ${guarBadge}
+        </div>
+        <div class="toggle-row">
+          <label class="switch"><input type="checkbox" class="sc-holiday-toggle" data-sc="${sc.id}" ${r.holiday > 0 ? 'checked' : ''}><span class="track"></span></label>
+          <span>Repayment holiday</span>
+          <input type="number" class="sc-holiday-months" data-sc="${sc.id}" value="${sc.repaymentHolidayMonths || 0}" min="0" max="${termMonths() - 1}" ${r.holiday > 0 ? '' : 'disabled'} /> mo
+        </div>
+        <div class="toggle-row">
+          <label class="switch"><input type="checkbox" class="sc-prepay-toggle" data-sc="${sc.id}" ${plan && plan.enabled ? 'checked' : ''}><span class="track"></span></label>
+          <span>Extra repayments</span>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ---------------- TAB 1: MORTGAGE ---------------- */
+  function renderMortgageTab() {
+    const c = activeCountry();
+    const sc = activeScenario();
+    if (!sc) return;
+    const r = computeScenario(sc);
+    const upfrontCosts = state.costs.notary + state.costs.stateFee + state.costs.appraisal;
+    const cashUpfront = r.downPayment + upfrontCosts;
+
+    const kpis = `
+      <div class="kpi-grid">
+        <div class="kpi hero"><div class="k-label">Monthly payment</div><div class="k-value num">${money(r.monthly, 2)}</div><div class="k-sub">${r.holiday > 0 ? 'after ' + r.holiday + '-mo holiday' : c.benchmarkRateLabel + ' + margin'}</div></div>
+        <div class="kpi"><div class="k-label">Loan amount</div><div class="k-value num">${money(r.loanAmount)}</div><div class="k-sub">LTV ${pct(r.ltv.value)}</div></div>
+        <div class="kpi"><div class="k-label">Down payment</div><div class="k-value num">${money(r.downPayment)}</div><div class="k-sub">${sc.downPaymentPct}% of price</div></div>
+        <div class="kpi"><div class="k-label">Total interest</div><div class="k-value num">${money(r.totals.totalInterest)}</div><div class="k-sub">over ${(r.totals.payoffMonth / 12).toFixed(1)} yr</div></div>
+        <div class="kpi"><div class="k-label">Total paid</div><div class="k-value num">${money(r.totals.totalPaid)}</div><div class="k-sub">principal + interest${r.totals.totalFees ? ' + fees' : ''}</div></div>
+        <div class="kpi"><div class="k-label">Cash needed upfront</div><div class="k-value num">${money(cashUpfront)}</div><div class="k-sub">down + one-time costs</div></div>
+      </div>`;
+
+    const compliance = `
+      <div class="panel-box">
+        <h3>Compliance &amp; affordability <span class="hint">— ${c.flag} ${c.name}</span></h3>
+        <div class="compliance-grid">
+          ${compItem('LTV', pct(r.ltv.value), '≤ ' + pct(r.ltv.limit, 0) + (sc.useGuaranteeMode ? ' (' + (c.guaranteeName || 'guarantee') + ')' : ''), r.ltv.status, 'Loan-to-Value: your loan as a % of the property price. Banks cap this — see the Glossary.')}
+          ${compItem('DSTI', isFinite(r.dsti.value) ? pct(r.dsti.value) : 'n/a', '≤ ' + pct(c.maxDSTI, 0), r.dsti.status, 'Debt Service-to-Income: share of your monthly net income going to loan payments.')}
+          ${compItem('Stress DSTI', isFinite(r.stress.value) ? pct(r.stress.value) : 'n/a', '≤ ' + pct(c.maxDSTI, 0) + ' @ ' + r.stress.stressRate.toFixed(1) + '%', r.stress.status, 'Your DSTI if rates rose to the stress rate — the bank checks you could still afford it.')}
+          ${compItem('Stress monthly', money(round2(r.stress.stressPayment), 2), 'at ' + r.stress.stressRate.toFixed(1) + '% rate', r.stress.status, 'What your monthly payment would be at the higher stress rate.')}
+          ${compItem('Contract rate', contractRate().toFixed(2) + '%', c.benchmarkRateLabel + ' + margin', 'neutral', 'What you actually pay: ' + c.benchmarkRateLabel + ' + bank margin.')}
+          ${compItem('Stress rate', stressRate().toFixed(2) + '%', c.hasStressTest ? 'max(rate, ' + c.stressRateFloor + '%)' : 'no stress floor', 'neutral', c.hasStressTest ? 'The higher rate used for the affordability safety check.' : 'No statutory stress floor in this country.')}
+        </div>
+        ${r.holiday > 0 ? `<div class="warn-inline" style="color:var(--amber);margin-top:10px">Holiday adds ${money(r.holidayExtraInterest)} in total interest vs no holiday (${r.holiday} interest-only months).</div>` : ''}
+        <details class="notes"><summary>Regulatory notes</summary><ul>${c.regulatoryNotes.map(n => `<li>${n}</li>`).join('')}</ul></details>
+      </div>`;
+
+    const costsBox = `
+      <div class="panel-box">
+        <h3>One-time costs <span class="hint">— optional, editable</span></h3>
+        <div class="kpi-grid" style="margin-bottom:0">
+          ${costField('Notary', 'notary')}
+          ${costField('State fee', 'stateFee')}
+          ${costField('Appraisal', 'appraisal')}
+          ${costField('Insurance / year', 'insurancePerYear')}
+        </div>
+      </div>`;
+
+    // amortization grouped by year
+    const byYear = groupByYear(r.rows);
+    const hasExtra = r.rows.some(x => x.extraPayment > 0);
+    const amortRows = byYear.map(yr => `
+      <tr class="year-row">
+        <td>Year ${yr.year} <span style="color:var(--text-faint)">${yr.label}</span></td>
+        <td class="num">${money(yr.payment, 0)}</td>
+        <td class="num principal">${money(yr.principal, 0)}</td>
+        <td class="num interest">${money(yr.interest, 0)}</td>
+        ${hasExtra ? `<td class="num">${yr.extra ? money(yr.extra, 0) : '—'}</td>` : ''}
+        <td class="num">${money(yr.closing, 0)}</td>
+      </tr>`).join('');
+
+    const amort = `
+      <div class="panel-box">
+        <h3>Amortization schedule <span class="hint">— grouped by year · payoff ${r.totals.payoffDate || (r.totals.payoffMonth + ' months')}</span>
+          <button class="btn" style="float:right;padding:5px 10px" id="csvBtn">Download CSV</button></h3>
+        <div class="amort-wrap">
+          <table>
+            <thead><tr><th>Year</th><th class="num">Payment</th><th class="num">Principal</th><th class="num">Interest</th>${hasExtra ? '<th class="num">Extra</th>' : ''}<th class="num">Balance</th></tr></thead>
+            <tbody>${amortRows}</tbody>
+          </table>
+        </div>
+      </div>`;
+
+    document.getElementById('tab-mortgage').innerHTML = kpis + compliance + costsBox + amort;
+    const csvBtn = document.getElementById('csvBtn');
+    if (csvBtn) csvBtn.onclick = () => downloadCSV(r);
+  }
+
+  function compItem(label, value, limit, status, tip) {
+    const t = tip ? ` title="${escapeAttr(tip)}"` : '';
+    return `<div class="comp-item"${t}><div class="c-top"><span class="c-label">${label}</span><span class="badge ${status}">${status === 'neutral' ? '•' : status}</span></div><div class="c-value num">${value}</div><div class="c-limit">${limit}</div></div>`;
+  }
+  function costField(label, key) {
+    return `<div class="kpi" style="padding:9px 11px"><div class="k-label">${label}</div><input type="number" class="cost-input" data-cost="${key}" value="${state.costs[key]}" style="margin-top:6px" /></div>`;
+  }
+
+  function groupByYear(rows) {
+    const map = new Map();
+    for (const row of rows) {
+      const y = Math.ceil(row.monthIndex / 12);
+      if (!map.has(y)) map.set(y, { year: y, payment: 0, principal: 0, interest: 0, extra: 0, closing: row.closingBalance, label: '' });
+      const g = map.get(y);
+      g.payment += row.scheduledPayment + row.extraPayment;
+      g.principal += row.principalPayment + row.extraPayment;
+      g.interest += row.interestPayment;
+      g.extra += row.extraPayment;
+      g.closing = row.closingBalance;
+      g.label = row.date ? row.date.slice(-4) : '';
+    }
+    return [...map.values()];
+  }
+
+  /* ---------------- TAB 2: SCENARIO COMPARISON ---------------- */
+  function renderComparisonTab() {
+    const c = activeCountry();
+    const results = state.scenarios.map(computeScenario);
+
+    const head = `<th></th>` + results.map(r => `<th><span class="sc-colorhead"><span class="dot" style="background:${scColor(r.sc)}"></span>${escapeHtml(r.sc.name)}</span></th>`).join('');
+
+    const rowsDef = [
+      ['Down payment %', results.map(r => r.sc.downPaymentPct + '%'), null],
+      ['Down payment ' + c.currencySymbol, results.map(r => money(r.downPayment)), 'max'],
+      ['Loan amount', results.map(r => money(r.loanAmount)), 'min'],
+      ['Monthly payment', results.map(r => money(r.monthly, 2)), 'min'],
+      ['Stress monthly', results.map(r => money(round2(r.stress.stressPayment), 2)), 'min'],
+      ['Total interest', results.map(r => money(r.totals.totalInterest)), 'min'],
+      ['Total paid', results.map(r => money(r.totals.totalPaid)), 'min'],
+      ['DSTI', results.map(r => isFinite(r.dsti.value) ? pct(r.dsti.value) : 'n/a'), 'min'],
+      ['Stress DSTI', results.map(r => isFinite(r.stress.value) ? pct(r.stress.value) : 'n/a'), 'min'],
+      ['LTV', results.map(r => pct(r.ltv.value)), 'min'],
+      ['Payoff date', results.map(r => r.totals.payoffDate || (r.totals.payoffMonth + ' mo')), null],
+      ['Compliance', results.map(r => `<span class="badge ${r.overallStatus}">${r.overallStatus}</span>`), null],
+    ];
+
+    const numericForBest = {
+      1: results.map(r => r.downPayment), 2: results.map(r => r.loanAmount), 3: results.map(r => r.monthly),
+      4: results.map(r => r.stress.stressPayment), 5: results.map(r => r.totals.totalInterest), 6: results.map(r => r.totals.totalPaid),
+      7: results.map(r => r.dsti.value), 8: results.map(r => r.stress.value), 9: results.map(r => r.ltv.value),
+    };
+
+    const body = rowsDef.map((def, ri) => {
+      const [label, cells, best] = def;
+      let bestIdx = -1;
+      if (best && numericForBest[ri]) {
+        const arr = numericForBest[ri].map(v => (isFinite(v) ? v : (best === 'min' ? Infinity : -Infinity)));
+        bestIdx = best === 'min' ? arr.indexOf(Math.min(...arr)) : arr.indexOf(Math.max(...arr));
+      }
+      return `<tr><td>${label}</td>${cells.map((cell, ci) => `<td class="num ${ci === bestIdx && results.length > 1 ? 'best' : ''}">${cell}</td>`).join('')}</tr>`;
+    }).join('');
+
+    let html = `<div class="panel-box"><h3>All scenarios side by side</h3>
+      <div style="overflow-x:auto"><table class="cmp-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table></div></div>`;
+
+    // prepayment comparison if any
+    const withPrepay = results.filter(r => r.hasPrepay);
+    if (withPrepay.length) {
+      const pHead = `<th></th>` + withPrepay.map(r => `<th><span class="sc-colorhead"><span class="dot" style="background:${scColor(r.sc)}"></span>${escapeHtml(r.sc.name)}</span></th>`).join('');
+      const pRows = [
+        ['Original payoff', withPrepay.map(r => fmtMonths(r.baseTotals.payoffMonth))],
+        ['Payoff w/ prepayments', withPrepay.map(r => fmtMonths(r.totals.payoffMonth))],
+        ['Months saved', withPrepay.map(r => (r.baseTotals.payoffMonth - r.totals.payoffMonth) + ' mo')],
+        ['Interest saved', withPrepay.map(r => money(r.baseTotals.totalInterest - r.totals.totalInterest))],
+        ['Extra cash injected', withPrepay.map(r => money(r.totals.totalExtra))],
+        ['Fees paid', withPrepay.map(r => money(r.totals.totalFees))],
+      ].map(([label, cells]) => `<tr><td>${label}</td>${cells.map(x => `<td class="num">${x}</td>`).join('')}</tr>`).join('');
+      html += `<div class="panel-box"><h3>With prepayments</h3>
+        <div style="overflow-x:auto"><table class="cmp-table"><thead><tr>${pHead}</tr></thead><tbody>${pRows}</tbody></table></div></div>`;
+    }
+    document.getElementById('tab-comparison').innerHTML = html;
+  }
+
+  /* ---------------- TAB 3: SELL VS KEEP ---------------- */
+  function renderSellKeepTab() {
+    const c = activeCountry();
+    const tm = termMonths();
+    const rate = contractRate();
+    const start = startDateObj();
+    const ap = state.apartment;
+    const years = state.horizonYears;
+    const horizonMonths = Math.min(years * 12, tm);
+
+    // Sell: down = ownCash + apartment value. Keep: down = ownCash.
+    const sellDown = Math.min(state.ownCash + ap.currentValue, state.propertyPrice);
+    const keepDown = Math.min(state.ownCash, state.propertyPrice);
+    const sellLoan = Math.max(0, round2(state.propertyPrice - sellDown));
+    const keepLoan = Math.max(0, round2(state.propertyPrice - keepDown));
+
+    const sellRows = amortize(sellLoan, rate, tm, 0, [], 'shorten_term', 0, start, c.dateFormat);
+    const keepRows = amortize(keepLoan, rate, tm, 0, [], 'shorten_term', 0, start, c.dateFormat);
+
+    const sellCum = cumulativeAt(sellRows, horizonMonths);
+    const keepCum = cumulativeAt(keepRows, horizonMonths);
+    const sellMonthly = round2(monthlyPayment(sellLoan, rate, tm));
+    const keepMonthly = round2(monthlyPayment(keepLoan, rate, tm));
+
+    const futureValue = ap.currentValue * Math.pow(1 + ap.annualAppreciationPct / 100, years);
+    const appreciation = futureValue - ap.currentValue;
+    const cumRent = ap.netMonthlyRentProfit * 12 * years;
+
+    const addlInterest = keepCum.interest - sellCum.interest;
+    const addlPrincipalOutstanding = keepCum.remaining - sellCum.remaining;
+    const keepAdvantage = cumRent + appreciation - addlInterest - addlPrincipalOutstanding;
+
+    // break-evens (solve keepAdvantage = 0)
+    const breakEvenRent = (addlInterest + addlPrincipalOutstanding - appreciation) / (12 * years);
+    const apprNeeded = addlInterest + addlPrincipalOutstanding - cumRent; // appreciation € needed
+    const fvNeeded = ap.currentValue + apprNeeded;
+    const breakEvenAppr = (ap.currentValue > 0 && fvNeeded > 0)
+      ? (Math.pow(fvNeeded / ap.currentValue, 1 / years) - 1) * 100 : null;
+
+    // net financial position per path (lower outflow + assets is better)
+    const sellNet = -(sellCum.interest) - sellCum.remaining;
+    const keepNet = cumRent + appreciation - keepCum.interest - keepCum.remaining;
+
+    const pills = `<div class="pills">${[2, 5, 10, 15, 20].map(y => `<button class="pill ${y === years ? 'active' : ''}" data-horizon="${y}">${y} yr</button>`).join('')}</div>`;
+
+    const summary = `
+      <div class="panel-box">
+        <h3>Apartment at ${years}-year horizon</h3>
+        <div class="kpi-grid" style="margin-bottom:0">
+          <div class="kpi"><div class="k-label">Current value</div><div class="k-value num">${money(ap.currentValue)}</div></div>
+          <div class="kpi"><div class="k-label">Future value</div><div class="k-value num">${money(futureValue)}</div><div class="k-sub">${ap.annualAppreciationPct}% / yr</div></div>
+          <div class="kpi"><div class="k-label">Appreciation gain</div><div class="k-value num">${money(appreciation)}</div></div>
+          <div class="kpi"><div class="k-label">Rent profit accumulated</div><div class="k-value num">${money(cumRent)}</div><div class="k-sub">${money(ap.netMonthlyRentProfit, 0)}/mo net</div></div>
+        </div>
+      </div>`;
+
+    const rowsHtml = [
+      ['Down payment used', money(sellDown), money(keepDown)],
+      ['Loan amount', money(sellLoan), money(keepLoan)],
+      ['Monthly payment', money(sellMonthly, 2), money(keepMonthly, 2)],
+      [`Cumulative payments @ ${years}y`, money(sellCum.paid), money(keepCum.paid)],
+      ['Remaining balance', money(sellCum.remaining), money(keepCum.remaining)],
+      ['Interest paid', money(sellCum.interest), money(keepCum.interest)],
+      ['Rent profit accumulated', money(0), money(cumRent)],
+      ['Apartment value gain', money(0), money(appreciation)],
+    ].map(([l, s, k]) => `<tr><td>${l}</td><td class="num">${s}</td><td class="num">${k}</td></tr>`).join('');
+
+    const netRow = `<tr style="border-top:2px solid var(--border)"><td><strong>Net financial position</strong></td>
+        <td class="num ${sellNet >= keepNet ? 'best' : ''}"><strong>${money(sellNet)}</strong></td>
+        <td class="num ${keepNet > sellNet ? 'best' : ''}"><strong>${money(keepNet)}</strong></td></tr>`;
+
+    const table = `
+      <div class="panel-box">
+        <h3>Sell vs keep @ ${years} years</h3>
+        <table class="cmp-table">
+          <thead><tr><th>Metric</th><th>Sell apartment</th><th>Keep apartment</th></tr></thead>
+          <tbody>${rowsHtml}${netRow}</tbody>
+        </table>
+      </div>`;
+
+    const keepBetter = keepAdvantage > 0;
+    const verdict = `
+      <div class="verdict">
+        <div class="big ${keepBetter ? 'keep' : 'sell'}">${keepBetter ? '+' : ''}${money(keepAdvantage)}</div>
+        <div class="sentence">${keepBetter
+          ? `Keeping your apartment is worth <strong>${money(Math.abs(keepAdvantage))} more</strong> than selling it over ${years} years under these assumptions.`
+          : `Selling your apartment is worth <strong>${money(Math.abs(keepAdvantage))} more</strong> than keeping it over ${years} years under these assumptions.`}</div>
+        <div class="breakeven">Break-even rent: apartment needs to generate at least <strong class="num">${money(breakEvenRent, 0)}/month</strong> net to justify keeping.</div>
+        <div class="breakeven">Break-even appreciation: apartment needs to appreciate at least <strong class="num">${breakEvenAppr == null ? 'n/a' : breakEvenAppr.toFixed(2) + '%/year'}</strong> to justify keeping.</div>
+      </div>`;
+
+    document.getElementById('tab-sellkeep').innerHTML = pills + summary + table + verdict;
+  }
+
+  /* ---------------- TAB 4: EXTRA REPAYMENTS ---------------- */
+  function renderExtraTab() {
+    const c = activeCountry();
+    const sc = activeScenario();
+    if (!sc) return;
+    const plan = sc.prepaymentPlan;
+    const r = computeScenario(sc);
+
+    const settings = `
+      <div class="panel-box">
+        <h3>Prepayment settings <span class="hint">— scenario: ${escapeHtml(sc.name)}</span></h3>
+        <div class="toggle-row" style="margin-bottom:12px">
+          <label class="switch"><input type="checkbox" id="exEnabled" ${plan.enabled ? 'checked' : ''}><span class="track"></span></label>
+          <span>Enable extra repayments for this scenario</span>
+        </div>
+        <div class="kpi-grid" style="margin-bottom:0;${plan.enabled ? '' : 'opacity:.5;pointer-events:none'}">
+          <div class="kpi" style="padding:9px 11px"><div class="k-label">Mode</div>
+            <select id="exMode" style="margin-top:6px"><option value="fixed_yearly" ${plan.mode === 'fixed_yearly' ? 'selected' : ''}>Fixed yearly</option><option value="custom" ${plan.mode === 'custom' ? 'selected' : ''}>Custom schedule</option></select></div>
+          <div class="kpi" style="padding:9px 11px"><div class="k-label">Yearly amount (${c.currencySymbol})</div><input type="number" id="exAmount" value="${plan.fixedYearlyAmount}" step="500" style="margin-top:6px" ${plan.mode === 'custom' ? 'disabled' : ''}/></div>
+          <div class="kpi" style="padding:9px 11px"><div class="k-label">Payment month</div>
+            <select id="exMonth" style="margin-top:6px">${monthOptions(plan.paymentMonth)}</select></div>
+          <div class="kpi" style="padding:9px 11px"><div class="k-label">Strategy</div>
+            <select id="exStrategy" style="margin-top:6px"><option value="shorten_term" ${plan.strategy === 'shorten_term' ? 'selected' : ''}>Shorten term</option><option value="reduce_payment" ${plan.strategy === 'reduce_payment' ? 'selected' : ''}>Reduce payment</option></select></div>
+          <div class="kpi" style="padding:9px 11px"><div class="k-label">Early repayment fee %</div><input type="number" id="exFee" value="${plan.feePct}" step="0.1" style="margin-top:6px" /><div class="k-sub">country default ${c.defaultEarlyRepaymentFeePct}%</div></div>
+        </div>
+        ${plan.mode === 'custom' ? customScheduleEditor(plan, c) : ''}
+      </div>`;
+
+    let impact = '';
+    if (plan.enabled && r.hasPrepay) {
+      const monthsSaved = r.baseTotals.payoffMonth - r.totals.payoffMonth;
+      const interestSaved = r.baseTotals.totalInterest - r.totals.totalInterest;
+      const netGain = interestSaved - r.totals.totalFees;
+      impact = `
+        <div class="panel-box">
+          <h3>Impact (${plan.strategy === 'shorten_term' ? 'shorten term' : 'reduce payment'})</h3>
+          <div class="two-col">
+            <div>
+              <div class="stat-line"><span>Original term</span><span class="v">${fmtMonths(r.baseTotals.payoffMonth)}</span></div>
+              <div class="stat-line"><span>New term</span><span class="v">${fmtMonths(r.totals.payoffMonth)}</span></div>
+              <div class="stat-line"><span>Months saved</span><span class="v">${monthsSaved} mo</span></div>
+            </div>
+            <div>
+              <div class="stat-line"><span>Interest saved</span><span class="v" style="color:var(--green)">${money(interestSaved)}</span></div>
+              <div class="stat-line"><span>Total extra injected</span><span class="v">${money(r.totals.totalExtra)}</span></div>
+              <div class="stat-line"><span>Fees paid</span><span class="v" style="color:var(--amber)">${money(r.totals.totalFees)}</span></div>
+              <div class="stat-line"><span><strong>Net gain after fees</strong></span><span class="v" style="color:${netGain >= 0 ? 'var(--green)' : 'var(--fail)'}"><strong>${money(netGain)}</strong></span></div>
+            </div>
+          </div>
+        </div>`;
+    } else if (plan.enabled) {
+      impact = `<div class="panel-box"><p style="color:var(--text-dim);margin:0">Set a yearly amount (or custom schedule) above to see the impact.</p></div>`;
+    } else {
+      impact = `<div class="panel-box"><p style="color:var(--text-dim);margin:0">Enable extra repayments to model early payoff for this scenario.</p></div>`;
+    }
+
+    // yearly comparison
+    let yearlyTable = '';
+    if (plan.enabled && r.hasPrepay) {
+      const targetYears = [1, 2, 5, 10, 15, 20].filter(y => y <= Math.ceil(termMonths() / 12));
+      const baseByYear = cumByYearMap(r.baseRows);
+      const prepayByYear = cumByYearMap(r.rows);
+      const rows = targetYears.map(y => {
+        const month = Math.min(y * 12, termMonths());
+        const nb = closingAtMonth(r.baseRows, month);
+        const pb = closingAtMonth(r.rows, month);
+        const baseInt = baseByYear(month);
+        const prepayInt = prepayByYear(month);
+        const saved = baseInt - prepayInt;
+        return `<tr><td>Year ${y}</td><td class="num">${money(nb)}</td><td class="num">${money(pb)}</td><td class="num" style="color:var(--green)">${money(saved)}</td></tr>`;
+      }).join('');
+      yearlyTable = `
+        <div class="panel-box">
+          <h3>Yearly balance comparison</h3>
+          <table class="cmp-table">
+            <thead><tr><th>Year</th><th class="num">Normal balance</th><th class="num">With prepayments</th><th class="num">Interest saved YTD</th></tr></thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>`;
+    }
+
+    document.getElementById('tab-extra').innerHTML = settings + impact + yearlyTable;
+    wireExtraTab(sc);
+  }
+
+  function customScheduleEditor(plan, c) {
+    const rows = (plan.customSchedule || []).map((it, i) => `
+      <div class="toggle-row">
+        <span>Year</span><input type="number" class="cs-year" data-i="${i}" value="${it.year}" min="1" style="width:54px" />
+        <span>Amount</span><input type="number" class="cs-amount" data-i="${i}" value="${it.amount}" step="500" style="width:90px" />
+        <button class="icon-btn cs-del" data-i="${i}">✕</button>
+      </div>`).join('');
+    return `<div style="margin-top:12px"><div class="k-label">Custom yearly schedule</div>${rows}<button class="btn ghost cs-add" style="margin-top:8px;padding:5px 10px">+ Add year</button></div>`;
+  }
+
+  function monthOptions(sel) {
+    const names = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    return names.map((n, i) => `<option value="${i + 1}" ${i + 1 === sel ? 'selected' : ''}>${n}</option>`).join('');
+  }
+
+  function cumByYearMap(rows) {
+    return function (month) {
+      let interest = 0;
+      for (const r of rows) { if (r.monthIndex > month) break; interest += r.interestPayment; }
+      return interest;
+    };
+  }
+  function closingAtMonth(rows, month) {
+    let bal = rows.length ? rows[0].openingBalance : 0;
+    let last = 0;
+    for (const r of rows) { if (r.monthIndex > month) break; last = r.closingBalance; }
+    if (month >= rows.length) return rows.length ? rows[rows.length - 1].closingBalance : 0;
+    return last;
+  }
+  function fmtMonths(m) { return Math.floor(m / 12) + 'y ' + (m % 12) + 'm'; }
+
+  /* =============================== CSV =============================== */
+  function downloadCSV(r) {
+    const c = activeCountry();
+    const d = c.csvDelimiter;
+    const hasExtra = r.rows.some(x => x.extraPayment > 0);
+    const csvNum = (v) => fmtNum(v, 2);
+    const header = ['Payment date', 'Balance', 'Principal repayment', 'Interest payment', 'Total']
+      .concat(hasExtra ? ['Extra payment'] : []).join(d);
+    const lines = r.rows.map(row => {
+      const base = [row.date, csvNum(row.openingBalance), csvNum(row.principalPayment), csvNum(row.interestPayment), csvNum(row.scheduledPayment)];
+      if (hasExtra) base.push(csvNum(row.extraPayment));
+      return base.join(d);
+    });
+    const csv = [header].concat(lines).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `amortization_${c.code}_${escapeHtml(r.sc.name).replace(/[^a-z0-9]+/gi, '_')}.csv`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  /* =============================== HELPERS =============================== */
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m])); }
+  function escapeAttr(s) { return escapeHtml(s); }
+  function num(v, fallback) { const n = parseFloat(v); return isNaN(n) ? (fallback || 0) : n; }
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  /* =============================== PERSISTENCE =============================== */
+  const STORE_KEY = 'hlc-state';
+  // UTF-8-safe URL-safe base64 (handles non-Latin scenario names)
+  function b64u(s) { return btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function ub64(s) { s = s.replace(/-/g, '+').replace(/_/g, '/'); while (s.length % 4) s += '='; return decodeURIComponent(escape(atob(s))); }
+
+  // Compact snapshot of everything needed to fully restore the app.
+  function snapshot() {
+    return {
+      v: 1, country: state.countryCode, theme: state.theme,
+      price: state.propertyPrice, cash: state.ownCash, term: state.termYears,
+      bench: state.benchmarkRatePct, margin: state.bankMarginPct,
+      income: state.netMonthlyIncome, debts: state.otherMonthlyDebts,
+      start: state.loanStartDate, costs: state.costs, apt: state.apartment,
+      horizon: state.horizonYears,
+      active: state.scenarios.findIndex(s => s.id === state.activeScenarioId),
+      scenarios: state.scenarios.map(s => ({
+        name: s.name, down: s.downPaymentPct, guar: s.useGuaranteeMode,
+        useApt: s.useApartmentProceeds, hol: s.repaymentHolidayMonths, plan: s.prepaymentPlan,
+      })),
+    };
+  }
+
+  function restore(o) {
+    if (!o || typeof o !== 'object') return false;
+    try {
+      if (o.country && COUNTRIES.some(c => c.code === o.country)) state.countryCode = o.country;
+      if (o.theme === 'light' || o.theme === 'dark') state.theme = o.theme;
+      const c = activeCountry();
+      if (o.price != null) state.propertyPrice = Math.max(0, +o.price);
+      if (o.cash != null) state.ownCash = Math.max(0, +o.cash);
+      if (o.term != null) state.termYears = clamp(Math.round(+o.term), 1, c.maxTermYears);
+      if (o.bench != null) state.benchmarkRatePct = Math.max(0, +o.bench);
+      if (o.margin != null) state.bankMarginPct = Math.max(0, +o.margin);
+      if (o.income != null) state.netMonthlyIncome = Math.max(0, +o.income);
+      if (o.debts != null) state.otherMonthlyDebts = Math.max(0, +o.debts);
+      if (typeof o.start === 'string') state.loanStartDate = o.start;
+      if (o.costs && typeof o.costs === 'object') Object.assign(state.costs, o.costs);
+      if (o.apt && typeof o.apt === 'object') Object.assign(state.apartment, o.apt);
+      if (o.horizon != null) state.horizonYears = +o.horizon;
+      if (Array.isArray(o.scenarios) && o.scenarios.length) {
+        state.scenarios = o.scenarios.slice(0, 8).map(s => ({
+          id: uid(), name: String(s.name || 'Scenario'),
+          downPaymentPct: clamp(+s.down || 15, 0, 50),
+          useGuaranteeMode: !!s.guar, useApartmentProceeds: !!s.useApt,
+          repaymentHolidayMonths: Math.max(0, Math.round(+s.hol || 0)),
+          prepaymentPlan: Object.assign(defaultPlan(c), s.plan || {}),
+        }));
+        const idx = (o.active >= 0 && o.active < state.scenarios.length) ? o.active : 0;
+        state.activeScenarioId = state.scenarios[idx].id;
+      }
+      return true;
+    } catch (e) { console.warn('Could not restore state:', e); return false; }
+  }
+
+  // Persist on every change. If a share-hash is in the URL, keep it current too,
+  // so a refresh or a bookmark made later still reflects the latest edits.
+  function save() {
+    try {
+      const enc = b64u(JSON.stringify(snapshot()));
+      localStorage.setItem(STORE_KEY, enc);
+      if (location.hash.indexOf('#s=') === 0) history.replaceState(null, '', '#s=' + enc);
+    } catch (e) { /* storage may be unavailable (private mode) — ignore */ }
+  }
+
+  function copyLink() {
+    const enc = b64u(JSON.stringify(snapshot()));
+    const url = location.origin + location.pathname + '#s=' + enc;
+    try { history.replaceState(null, '', '#s=' + enc); } catch (e) {}
+    const btn = document.getElementById('shareBtn');
+    const flash = (msg) => { btn.textContent = msg; setTimeout(() => { btn.textContent = '🔗 Copy link'; }, 1800); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(url).then(() => flash('Copied ✓')).catch(() => flash('In address bar ↑'));
+    } else { flash('In address bar ↑'); }
+  }
+
+  function resetAll() {
+    if (!confirm('Reset all inputs to defaults and clear saved data?')) return;
+    try { localStorage.removeItem(STORE_KEY); } catch (e) {}
+    try { history.replaceState(null, '', location.pathname); } catch (e) {}
+    location.reload();
+  }
+
+  // Load priority: share-link hash > saved localStorage > defaults.
+  function loadInitialState() {
+    if (location.hash.indexOf('#s=') === 0) {
+      try { if (restore(JSON.parse(ub64(location.hash.slice(3))))) return true; }
+      catch (e) { console.warn('Invalid share link, ignoring.', e); }
+    }
+    try {
+      const saved = localStorage.getItem(STORE_KEY);
+      if (saved && restore(JSON.parse(ub64(saved)))) return true;
+    } catch (e) { /* ignore */ }
+    return false;
+  }
+
+  /* =============================== EVENTS =============================== */
+  function onCountryChange(code) {
+    const c = COUNTRIES.find(x => x.code === code);
+    if (!c) return;
+    state.countryCode = code;
+    state.termYears = c.defaultTermYears;
+    state.benchmarkRatePct = c.defaultBenchmarkRatePct;
+    state.bankMarginPct = c.defaultMarginPct;
+    state.scenarios = defaultScenarios(c);
+    state.activeScenarioId = state.scenarios[0].id;
+    render();
+  }
+
+  function wireGlobalInputs() {
+    const bind = (id, fn) => { const el = document.getElementById(id); el.addEventListener('input', () => { fn(el.value); render(); }); };
+    document.getElementById('countrySelect').addEventListener('change', e => onCountryChange(e.target.value));
+
+    bind('propertyPrice', v => { state.propertyPrice = num(v, state.propertyPrice); });
+    bind('propertyPriceRange', v => { state.propertyPrice = num(v, state.propertyPrice); });
+    bind('ownCash', v => { state.ownCash = Math.max(0, num(v)); });
+    bind('termYearsRange', v => { state.termYears = clamp(Math.round(num(v, 1)), 1, activeCountry().maxTermYears); });
+    bind('benchmarkRatePct', v => { state.benchmarkRatePct = Math.max(0, num(v)); });
+    bind('bankMarginPct', v => { state.bankMarginPct = Math.max(0, num(v)); });
+    bind('netMonthlyIncome', v => { state.netMonthlyIncome = Math.max(0, num(v)); });
+    bind('otherMonthlyDebts', v => { state.otherMonthlyDebts = Math.max(0, num(v)); });
+    bind('loanStartDate', v => { if (v) state.loanStartDate = v; });
+    bind('apartmentValue', v => { state.apartment.currentValue = Math.max(0, num(v)); });
+    bind('rentProfit', v => { state.apartment.netMonthlyRentProfit = num(v); });
+    bind('appreciationPct', v => { state.apartment.annualAppreciationPct = num(v); });
+
+    document.getElementById('themeToggle').onclick = () => {
+      state.theme = state.theme === 'dark' ? 'light' : 'dark';
+      try { localStorage.setItem('hlc-theme', state.theme); } catch (e) {}
+      render();
+    };
+    document.getElementById('shareBtn').onclick = copyLink;
+    document.getElementById('resetBtn').onclick = resetAll;
+
+    const glossary = document.getElementById('glossaryModal');
+    const openGlossary = () => { glossary.hidden = false; document.getElementById('glossaryClose').focus(); };
+    const closeGlossary = () => { glossary.hidden = true; };
+    document.getElementById('glossaryBtn').onclick = openGlossary;
+    document.getElementById('glossaryClose').onclick = closeGlossary;
+    glossary.addEventListener('click', e => { if (e.target === glossary) closeGlossary(); });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape' && !glossary.hidden) closeGlossary(); });
+
+    document.getElementById('addScenarioBtn').onclick = () => {
+      if (state.scenarios.length >= 8) return;
+      const c = activeCountry();
+      const sc = { id: uid(), name: 'Scenario ' + (state.scenarios.length + 1), downPaymentPct: 20, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(c) };
+      state.scenarios.push(sc);
+      state.activeScenarioId = sc.id;
+      render();
+      updateAddBtn();
+    };
+
+    document.getElementById('presetRow').addEventListener('click', e => {
+      const btn = e.target.closest('[data-preset]'); if (!btn) return;
+      const sc = activeScenario(); if (!sc) return;
+      sc.downPaymentPct = clamp(parseInt(btn.dataset.pct, 10), Math.round((1 - activeCountry().maxLTV) * 100), 50);
+      sc.useGuaranteeMode = btn.dataset.preset === 'guar';
+      render();
+    });
+
+    // scenario list (delegated)
+    const list = document.getElementById('scenarioList');
+    list.addEventListener('click', e => {
+      const actBtn = e.target.closest('[data-act]');
+      if (actBtn) {
+        e.stopPropagation();
+        const sc = state.scenarios.find(s => s.id === actBtn.dataset.sc);
+        if (actBtn.dataset.act === 'clone' && state.scenarios.length < 8) {
+          const copy = JSON.parse(JSON.stringify(sc)); copy.id = uid(); copy.name = sc.name + ' (copy)';
+          const idx = state.scenarios.indexOf(sc); state.scenarios.splice(idx + 1, 0, copy); state.activeScenarioId = copy.id;
+        } else if (actBtn.dataset.act === 'delete' && state.scenarios.length > 3) {
+          state.scenarios = state.scenarios.filter(s => s.id !== sc.id);
+          if (state.activeScenarioId === sc.id) state.activeScenarioId = state.scenarios[0].id;
+        }
+        render(); updateAddBtn(); return;
+      }
+      const card = e.target.closest('[data-sc]');
+      if (card && e.target.tagName !== 'INPUT') { state.activeScenarioId = card.dataset.sc; render(); }
+    });
+    list.addEventListener('input', e => {
+      const t = e.target;
+      const sc = state.scenarios.find(s => s.id === t.dataset.sc); if (!sc) return;
+      if (t.classList.contains('sc-name')) { sc.name = t.value; renderMortgageTab(); renderComparisonTab(); renderExtraTab(); }
+      else if (t.classList.contains('sc-down')) { sc.downPaymentPct = num(t.value); render(); }
+      else if (t.classList.contains('sc-holiday-months')) { sc.repaymentHolidayMonths = clamp(Math.round(num(t.value)), 0, termMonths() - 1); render(); }
+    });
+    list.addEventListener('change', e => {
+      const t = e.target;
+      const sc = state.scenarios.find(s => s.id === t.dataset.sc); if (!sc) return;
+      if (t.classList.contains('sc-holiday-toggle')) { sc.repaymentHolidayMonths = t.checked ? (sc.repaymentHolidayMonths || 12) : 0; render(); }
+      else if (t.classList.contains('sc-prepay-toggle')) { sc.prepaymentPlan.enabled = t.checked; render(); }
+    });
+
+    // costs (delegated on mortgage tab)
+    document.getElementById('tab-mortgage').addEventListener('input', e => {
+      const t = e.target;
+      if (t.classList.contains('cost-input')) { state.costs[t.dataset.cost] = Math.max(0, num(t.value)); renderMortgageTab(); }
+    });
+
+    // horizon pills
+    document.getElementById('tab-sellkeep').addEventListener('click', e => {
+      const p = e.target.closest('[data-horizon]'); if (!p) return;
+      state.horizonYears = parseInt(p.dataset.horizon, 10); renderSellKeepTab();
+    });
+
+    // tabs
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      };
+    });
+  }
+
+  function wireExtraTab(sc) {
+    const plan = sc.prepaymentPlan;
+    const on = (id, ev, fn) => { const el = document.getElementById(id); if (el) el.addEventListener(ev, fn); };
+    on('exEnabled', 'change', e => { plan.enabled = e.target.checked; render(); });
+    on('exMode', 'change', e => { plan.mode = e.target.value; render(); });
+    on('exAmount', 'input', e => { plan.fixedYearlyAmount = Math.max(0, num(e.target.value)); render(); });
+    on('exMonth', 'change', e => { plan.paymentMonth = parseInt(e.target.value, 10); render(); });
+    on('exStrategy', 'change', e => { plan.strategy = e.target.value; render(); });
+    on('exFee', 'input', e => { plan.feePct = Math.max(0, num(e.target.value)); render(); });
+
+    const tab = document.getElementById('tab-extra');
+    tab.querySelectorAll('.cs-year').forEach(el => el.addEventListener('input', e => { plan.customSchedule[+e.target.dataset.i].year = clamp(Math.round(num(e.target.value, 1)), 1, 40); render(); }));
+    tab.querySelectorAll('.cs-amount').forEach(el => el.addEventListener('input', e => { plan.customSchedule[+e.target.dataset.i].amount = Math.max(0, num(e.target.value)); render(); }));
+    tab.querySelectorAll('.cs-del').forEach(el => el.addEventListener('click', e => { plan.customSchedule.splice(+e.target.dataset.i, 1); render(); }));
+    const add = tab.querySelector('.cs-add');
+    if (add) add.addEventListener('click', () => { plan.customSchedule.push({ year: (plan.customSchedule.length + 1), amount: 10000 }); render(); });
+  }
+
+  function updateAddBtn() { document.getElementById('addScenarioBtn').disabled = state.scenarios.length >= 8; }
+
+  /* =============================== SELF-TEST =============================== */
+  function runSelfTest() {
+    try {
+      const rows = amortize(400000, 3, 180, 0, [], 'shorten_term', 0, null, 'DD.MM.YYYY');
+      const expect = [
+        [400000.00, 1762.33, 1000.00],
+        [398237.67, 1766.73, 995.59],
+        [396470.94, 1771.15, 991.18],
+      ];
+      let ok = true;
+      for (let i = 0; i < 3; i++) {
+        if (round2(rows[i].openingBalance) !== expect[i][0]) ok = false;
+        if (round2(rows[i].principalPayment) !== expect[i][1]) ok = false;
+        if (round2(rows[i].interestPayment) !== expect[i][2]) ok = false;
+      }
+      const totals = scheduleTotals(rows);
+      if (round2(totals.totalInterest) !== 97218.78) ok = false;
+      if (round2(monthlyPayment(400000, 3, 180)) !== 2762.33) ok = false;
+
+      const el = document.getElementById('engineStatus');
+      el.className = ok ? 'ok' : 'fail';
+      el.textContent = ok ? 'engine validated ✓' : 'engine FAILED ✗';
+      if (!ok) console.error('Engine self-test FAILED', rows.slice(0, 3), totals);
+      else console.log('Engine self-test passed: Swedbank reference matched to the cent.');
+    } catch (err) {
+      const el = document.getElementById('engineStatus'); el.className = 'fail'; el.textContent = 'engine error';
+      console.error(err);
+    }
+  }
+
+  /* =============================== INIT =============================== */
+  function init() {
+    if (!loadInitialState()) {
+      state.scenarios = defaultScenarios(activeCountry());
+      state.activeScenarioId = state.scenarios[0].id;
+    }
+    wireGlobalInputs();
+    render();
+    updateAddBtn();
+    runSelfTest();
+  }
+  document.addEventListener('DOMContentLoaded', init);
+})();
+</script>
+</body>
+</html>
