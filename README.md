@@ -87,3 +87,4 @@ const COUNTRIES = [Estonia, Finland, Latvia];
 
 For planning purposes only. All calculations assume a fixed interest rate and constant
 monthly income. Verify all figures with your bank and a qualified financial advisor.
+
