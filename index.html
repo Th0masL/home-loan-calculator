@@ -102,6 +102,8 @@
     font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-faint);
     font-weight: 700; margin: 4px 0 10px;
   }
+  .section-hint { font-size: 11.5px; color: var(--text-dim); margin: -4px 0 11px; line-height: 1.45; }
+  .section-hint b { color: var(--text); font-weight: 600; }
   .field { margin-bottom: 12px; }
   .field label { display: block; font-size: 12px; color: var(--text-dim); margin-bottom: 4px; font-weight: 500; }
   .field .row { display: flex; align-items: center; gap: 8px; }
@@ -143,9 +145,13 @@
   .scenario .down-row { display: flex; align-items: center; gap: 7px; margin: 5px 0; }
   .scenario .down-row .slider-val { min-width: 92px; }
   .badges { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 6px; }
+  .down-label { font-size: 10.5px; color: var(--text-faint); font-weight: 600; margin: 6px 0 1px; }
+  .down-label .dl-hint { font-weight: 400; }
   .toggle-row { display: flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 12px; color: var(--text-dim); }
   .toggle-row input[type="number"] { width: 58px; padding: 3px 5px; font-size: 12px; }
-  .switch { position: relative; width: 32px; height: 18px; flex: none; }
+  .toggle-text { cursor: pointer; }
+  .toggle-text:hover { color: var(--text); }
+  .switch { position: relative; width: 32px; height: 18px; flex: none; cursor: pointer; }
   .switch input { opacity: 0; width: 0; height: 0; }
   .switch .track { position: absolute; inset: 0; background: var(--border); border-radius: 999px; transition: .15s; }
   .switch .track::before { content: ""; position: absolute; width: 14px; height: 14px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: .15s; }
@@ -318,6 +324,7 @@
   <aside class="left">
     <div class="section">
       <div class="section-title">Country</div>
+      <p class="section-hint">Sets the lending limits (<b>LTV</b>, <b>DSTI</b>, stress test), default rates, and number/date formats used everywhere below. Switching country resets the inputs to that country's defaults.</p>
       <div class="country-select">
         <select id="countrySelect"></select>
       </div>
@@ -325,6 +332,7 @@
 
     <div class="section">
       <div class="section-title">New home</div>
+      <p class="section-hint">The home you want to buy plus your income. These are <b>shared by every scenario</b> and drive the affordability checks (LTV, DSTI, stress test).</p>
       <div class="field">
         <label>Property price (<span class="cur"></span>)</label>
         <div class="row">
@@ -335,13 +343,6 @@
       <div class="field">
         <label>Own cash available (<span class="cur"></span>)</label>
         <input type="number" id="ownCash" step="500" />
-      </div>
-      <div class="field">
-        <label>Loan term (years)</label>
-        <div class="row">
-          <input type="range" id="termYearsRange" min="1" step="1" />
-          <span class="slider-val" id="termYearsVal"></span>
-        </div>
       </div>
       <div class="field">
         <label id="benchmarkLabel">Benchmark rate %</label>
@@ -368,6 +369,11 @@
 
     <div class="section">
       <div class="section-title">Scenarios</div>
+      <p class="section-hint">
+        Each scenario is a <b>"what-if" version of the same loan</b> (same home, income &amp; rate) with a different
+        down payment or repayment setup. Compare them side-by-side in the <b>Scenario comparison</b> tab. Click a card to
+        see its full breakdown, or rename it and adjust its down payment / holiday / extra repayments.
+      </p>
       <div id="scenarioList"></div>
       <button class="btn ghost" id="addScenarioBtn" style="width:100%;margin-top:4px">+ Add scenario</button>
       <div class="preset-row" id="presetRow"></div>
@@ -375,6 +381,7 @@
 
     <div class="section">
       <div class="section-title">Existing apartment</div>
+      <p class="section-hint">Optional — powers the <b>Sell vs keep</b> tab. If you already own a flat, enter its value, the net monthly rent it earns, and expected yearly growth, to compare keeping it (rent + appreciation) against selling it to fund a bigger down payment.</p>
       <div class="field">
         <label>Current apartment value (<span class="cur"></span>)</label>
         <input type="number" id="apartmentValue" step="1000" />
@@ -439,6 +446,8 @@
 
       <div class="gloss-section">
         <h3>Getting started</h3>
+        <div class="gloss-item"><span class="gloss-term">Scenario</span>
+          <p class="gloss-def">A saved "what-if" version of the loan for the same home and income — usually a different down payment. The three starting scenarios are common Estonian choices: <b>KredEx/EIS (10%)</b> = the smallest down payment, using the state guarantee; <b>Standard (15%)</b> = the normal minimum down payment; <b>Larger down (20%)</b> = more cash down for a smaller loan and lower payments. Compare them in the Scenario comparison tab; you can add up to 8, clone, or rename them.</p></div>
         <div class="gloss-item"><span class="gloss-term">Property price <span class="alt">(deal amount)</span></span>
           <p class="gloss-def">The full price of the home you want to buy.</p></div>
         <div class="gloss-item"><span class="gloss-term">Down payment</span>
@@ -544,8 +553,8 @@ const Estonia = {
   maxLTV: 0.85, maxLTVWithGuarantee: 0.90, guaranteeName: 'KredEx/EIS',
   maxDSTI: 0.50, stressRateFloor: 6.0, hasStressTest: true,
   maxTermYears: 30, defaultTermYears: 20,
-  defaultBenchmarkRatePct: 2.4, defaultMarginPct: 1.8, benchmarkRateLabel: '6-month Euribor',
-  defaultEarlyRepaymentFeePct: 1.0,
+  defaultBenchmarkRatePct: 2.5, defaultMarginPct: 2.0, benchmarkRateLabel: '6-month Euribor',
+  defaultEarlyRepaymentFeePct: 0,
   csvDelimiter: ';', csvThousandsSep: ' ', csvDecimalSep: '.', dateFormat: 'DD.MM.YYYY',
   regulatoryNotes: [
     'LTV ≤ 85% standard (90% with KredEx/EIS guarantee) — Eesti Pank',
@@ -789,22 +798,22 @@ if (typeof globalThis !== 'undefined') {
   function defaultScenarios(country) {
     const minPct = Math.round((1 - country.maxLTV) * 100);
     const minGuarPct = country.maxLTVWithGuarantee ? Math.round((1 - country.maxLTVWithGuarantee) * 100) : minPct;
+    const t = country.defaultTermYears;
     return [
-      { id: uid(), name: `Standard (${minPct}%)`, downPaymentPct: minPct, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
-      { id: uid(), name: `${country.guaranteeName || 'Guarantee'} (${minGuarPct}%)`, downPaymentPct: minGuarPct, useGuaranteeMode: true, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
-      { id: uid(), name: 'Larger down (20%)', downPaymentPct: 20, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
+      { id: uid(), name: `Standard (${minPct}%)`, downPaymentPct: minPct, termYears: t, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
+      { id: uid(), name: `${country.guaranteeName || 'Guarantee'} (${minGuarPct}%)`, downPaymentPct: minGuarPct, termYears: t, useGuaranteeMode: true, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
+      { id: uid(), name: 'Larger down (20%)', downPaymentPct: 20, termYears: t, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
     ];
   }
 
   const state = {
     countryCode: 'EE',
     theme: localStorage.getItem('hlc-theme') || 'dark',
-    propertyPrice: 250000,
+    propertyPrice: 200000,
     ownCash: 40000,
-    termYears: 20,
-    benchmarkRatePct: 2.4,
-    bankMarginPct: 1.8,
-    netMonthlyIncome: 3500,
+    benchmarkRatePct: 2.5,
+    bankMarginPct: 2.0,
+    netMonthlyIncome: 3000,
     otherMonthlyDebts: 0,
     loanStartDate: todayISO(),
     costs: { notary: 200, stateFee: 260, appraisal: 300, insurancePerYear: 400 },
@@ -812,6 +821,7 @@ if (typeof globalThis !== 'undefined') {
     activeScenarioId: null,
     apartment: { currentValue: 120000, netMonthlyRentProfit: 400, annualAppreciationPct: 3.0 },
     horizonYears: 10,
+    invest: { returnPct: 7, feePct: 0.2, cgtPct: 22 },
   };
 
   function activeCountry() { return COUNTRIES.find(c => c.code === state.countryCode) || COUNTRIES[0]; }
@@ -821,7 +831,7 @@ if (typeof globalThis !== 'undefined') {
     const c = activeCountry();
     return c.hasStressTest ? Math.max(contractRate(), c.stressRateFloor) : contractRate();
   }
-  function termMonths() { return Math.round(state.termYears * 12); }
+  function termMonths(sc) { const y = (sc && sc.termYears != null) ? sc.termYears : activeCountry().defaultTermYears; return Math.round(y * 12); }
   function startDateObj() { return new Date(state.loanStartDate + 'T00:00:00'); }
 
   /* ---- formatting ---- */
@@ -841,7 +851,7 @@ if (typeof globalThis !== 'undefined') {
   /* ---- per-scenario computation ---- */
   function computeScenario(sc) {
     const c = activeCountry();
-    const tm = termMonths();
+    const tm = termMonths(sc);
     const rate = contractRate();
     const start = startDateObj();
     const downPayment = round2(state.propertyPrice * sc.downPaymentPct / 100);
@@ -899,10 +909,6 @@ if (typeof globalThis !== 'undefined') {
     setVal('propertyPrice', state.propertyPrice);
     setVal('propertyPriceRange', state.propertyPrice);
     setVal('ownCash', state.ownCash);
-    const termRange = document.getElementById('termYearsRange');
-    termRange.max = c.maxTermYears;
-    setVal('termYearsRange', state.termYears);
-    document.getElementById('termYearsVal').textContent = state.termYears + ' yr';
     setVal('benchmarkRatePct', state.benchmarkRatePct);
     setVal('bankMarginPct', state.bankMarginPct);
     setVal('netMonthlyIncome', state.netMonthlyIncome);
@@ -960,25 +966,31 @@ if (typeof globalThis !== 'undefined') {
           <input type="text" class="sc-name" data-sc="${sc.id}" value="${escapeAttr(sc.name)}" />
           <span class="scenario-actions">
             <button class="icon-btn" data-act="clone" data-sc="${sc.id}" title="Clone">⧉</button>
-            <button class="icon-btn" data-act="delete" data-sc="${sc.id}" title="Delete" ${state.scenarios.length <= 3 ? 'disabled' : ''}>✕</button>
+            <button class="icon-btn" data-act="delete" data-sc="${sc.id}" title="${state.scenarios.length <= 1 ? 'At least one scenario is required' : 'Delete scenario'}" ${state.scenarios.length <= 1 ? 'disabled' : ''}>✕</button>
           </span>
         </div>
+        <div class="down-label">Down payment <span class="dl-hint">— drag to change</span></div>
         <div class="down-row">
-          <input type="range" class="sc-down" data-sc="${sc.id}" min="${minPct}" max="50" step="1" value="${sc.downPaymentPct}" />
+          <input type="range" class="sc-down" data-sc="${sc.id}" min="${minPct}" max="50" step="1" value="${sc.downPaymentPct}" title="Drag to set this scenario's down payment, as a % of the property price (min ${minPct}%, max 50%)." />
           <span class="slider-val">${sc.downPaymentPct}% · ${money(r.downPayment)}</span>
+        </div>
+        <div class="down-label">Loan term <span class="dl-hint">— drag to change</span></div>
+        <div class="down-row">
+          <input type="range" class="sc-term" data-sc="${sc.id}" min="1" max="${c.maxTermYears}" step="1" value="${sc.termYears}" title="Drag to set this scenario's loan term in years (1–${c.maxTermYears})." />
+          <span class="slider-val">${sc.termYears} yr</span>
         </div>
         <div class="badges">
           <span class="badge ${r.ltv.status}">LTV ${pct(r.ltv.value)}</span>
           ${guarBadge}
         </div>
         <div class="toggle-row">
-          <label class="switch"><input type="checkbox" class="sc-holiday-toggle" data-sc="${sc.id}" ${r.holiday > 0 ? 'checked' : ''}><span class="track"></span></label>
-          <span>Repayment holiday</span>
-          <input type="number" class="sc-holiday-months" data-sc="${sc.id}" value="${sc.repaymentHolidayMonths || 0}" min="0" max="${termMonths() - 1}" ${r.holiday > 0 ? '' : 'disabled'} /> mo
+          <label class="switch" title="Turn on an interest-only period at the start of the loan"><input type="checkbox" id="hol-${sc.id}" class="sc-holiday-toggle" data-sc="${sc.id}" ${r.holiday > 0 ? 'checked' : ''}><span class="track"></span></label>
+          <label class="toggle-text" for="hol-${sc.id}" title="Interest-only period at the start: lower early payments, but more total interest. Switch on, then set how many months.">Repayment holiday</label>
+          <input type="number" class="sc-holiday-months" data-sc="${sc.id}" value="${sc.repaymentHolidayMonths || 0}" min="0" max="${termMonths(sc) - 1}" ${r.holiday > 0 ? '' : 'disabled'} title="${r.holiday > 0 ? 'Number of interest-only months at the start.' : 'Switch on the holiday first, then set the number of months.'}" /> mo
         </div>
         <div class="toggle-row">
-          <label class="switch"><input type="checkbox" class="sc-prepay-toggle" data-sc="${sc.id}" ${plan && plan.enabled ? 'checked' : ''}><span class="track"></span></label>
-          <span>Extra repayments</span>
+          <label class="switch" title="Turn on extra repayments for this scenario"><input type="checkbox" id="pre-${sc.id}" class="sc-prepay-toggle" data-sc="${sc.id}" ${plan && plan.enabled ? 'checked' : ''}><span class="track"></span></label>
+          <label class="toggle-text" for="pre-${sc.id}" title="Pay extra to clear the loan faster and save interest. Switch on here, then set the amount and strategy in the Extra repayments tab.">Extra repayments</label>
         </div>
       </div>`;
     }).join('');
@@ -992,6 +1004,10 @@ if (typeof globalThis !== 'undefined') {
     const r = computeScenario(sc);
     const upfrontCosts = state.costs.notary + state.costs.stateFee + state.costs.appraisal;
     const cashUpfront = r.downPayment + upfrontCosts;
+    const cashGap = round2(state.ownCash - cashUpfront);
+    const afford = cashGap >= 0
+      ? `<span style="color:var(--ok)">✓ covered · ${money(cashGap)} to spare</span>`
+      : `<span style="color:var(--fail)">✗ short by ${money(-cashGap)}</span>`;
 
     const kpis = `
       <div class="kpi-grid">
@@ -1000,7 +1016,7 @@ if (typeof globalThis !== 'undefined') {
         <div class="kpi"><div class="k-label">Down payment</div><div class="k-value num">${money(r.downPayment)}</div><div class="k-sub">${sc.downPaymentPct}% of price</div></div>
         <div class="kpi"><div class="k-label">Total interest</div><div class="k-value num">${money(r.totals.totalInterest)}</div><div class="k-sub">over ${(r.totals.payoffMonth / 12).toFixed(1)} yr</div></div>
         <div class="kpi"><div class="k-label">Total paid</div><div class="k-value num">${money(r.totals.totalPaid)}</div><div class="k-sub">principal + interest${r.totals.totalFees ? ' + fees' : ''}</div></div>
-        <div class="kpi"><div class="k-label">Cash needed upfront</div><div class="k-value num">${money(cashUpfront)}</div><div class="k-sub">down + one-time costs</div></div>
+        <div class="kpi"><div class="k-label">Cash needed upfront</div><div class="k-value num">${money(cashUpfront)}</div><div class="k-sub">down + costs vs your ${money(state.ownCash)}: ${afford}</div></div>
       </div>`;
 
     const compliance = `
@@ -1090,32 +1106,28 @@ if (typeof globalThis !== 'undefined') {
 
     const head = `<th></th>` + results.map(r => `<th><span class="sc-colorhead"><span class="dot" style="background:${scColor(r.sc)}"></span>${escapeHtml(r.sc.name)}</span></th>`).join('');
 
+    // each row: [label, displayCells, best ('min'|'max'|null), numericValues?]
     const rowsDef = [
       ['Down payment %', results.map(r => r.sc.downPaymentPct + '%'), null],
-      ['Down payment ' + c.currencySymbol, results.map(r => money(r.downPayment)), 'max'],
-      ['Loan amount', results.map(r => money(r.loanAmount)), 'min'],
-      ['Monthly payment', results.map(r => money(r.monthly, 2)), 'min'],
-      ['Stress monthly', results.map(r => money(round2(r.stress.stressPayment), 2)), 'min'],
-      ['Total interest', results.map(r => money(r.totals.totalInterest)), 'min'],
-      ['Total paid', results.map(r => money(r.totals.totalPaid)), 'min'],
-      ['DSTI', results.map(r => isFinite(r.dsti.value) ? pct(r.dsti.value) : 'n/a'), 'min'],
-      ['Stress DSTI', results.map(r => isFinite(r.stress.value) ? pct(r.stress.value) : 'n/a'), 'min'],
-      ['LTV', results.map(r => pct(r.ltv.value)), 'min'],
+      ['Loan term', results.map(r => r.sc.termYears + ' yr'), null],
+      ['Down payment ' + c.currencySymbol, results.map(r => money(r.downPayment)), 'max', results.map(r => r.downPayment)],
+      ['Loan amount', results.map(r => money(r.loanAmount)), 'min', results.map(r => r.loanAmount)],
+      ['Monthly payment', results.map(r => money(r.monthly, 2)), 'min', results.map(r => r.monthly)],
+      ['Stress monthly', results.map(r => money(round2(r.stress.stressPayment), 2)), 'min', results.map(r => r.stress.stressPayment)],
+      ['Total interest', results.map(r => money(r.totals.totalInterest)), 'min', results.map(r => r.totals.totalInterest)],
+      ['Total paid', results.map(r => money(r.totals.totalPaid)), 'min', results.map(r => r.totals.totalPaid)],
+      ['DSTI', results.map(r => isFinite(r.dsti.value) ? pct(r.dsti.value) : 'n/a'), 'min', results.map(r => r.dsti.value)],
+      ['Stress DSTI', results.map(r => isFinite(r.stress.value) ? pct(r.stress.value) : 'n/a'), 'min', results.map(r => r.stress.value)],
+      ['LTV', results.map(r => pct(r.ltv.value)), 'min', results.map(r => r.ltv.value)],
       ['Payoff date', results.map(r => r.totals.payoffDate || (r.totals.payoffMonth + ' mo')), null],
       ['Compliance', results.map(r => `<span class="badge ${r.overallStatus}">${r.overallStatus}</span>`), null],
     ];
 
-    const numericForBest = {
-      1: results.map(r => r.downPayment), 2: results.map(r => r.loanAmount), 3: results.map(r => r.monthly),
-      4: results.map(r => r.stress.stressPayment), 5: results.map(r => r.totals.totalInterest), 6: results.map(r => r.totals.totalPaid),
-      7: results.map(r => r.dsti.value), 8: results.map(r => r.stress.value), 9: results.map(r => r.ltv.value),
-    };
-
-    const body = rowsDef.map((def, ri) => {
-      const [label, cells, best] = def;
+    const body = rowsDef.map((def) => {
+      const [label, cells, best, nums] = def;
       let bestIdx = -1;
-      if (best && numericForBest[ri]) {
-        const arr = numericForBest[ri].map(v => (isFinite(v) ? v : (best === 'min' ? Infinity : -Infinity)));
+      if (best && nums) {
+        const arr = nums.map(v => (isFinite(v) ? v : (best === 'min' ? Infinity : -Infinity)));
         bestIdx = best === 'min' ? arr.indexOf(Math.min(...arr)) : arr.indexOf(Math.max(...arr));
       }
       return `<tr><td>${label}</td>${cells.map((cell, ci) => `<td class="num ${ci === bestIdx && results.length > 1 ? 'best' : ''}">${cell}</td>`).join('')}</tr>`;
@@ -1145,16 +1157,19 @@ if (typeof globalThis !== 'undefined') {
   /* ---------------- TAB 3: SELL VS KEEP ---------------- */
   function renderSellKeepTab() {
     const c = activeCountry();
-    const tm = termMonths();
+    const sc = activeScenario();
+    const tm = termMonths(sc);
     const rate = contractRate();
     const start = startDateObj();
     const ap = state.apartment;
     const years = state.horizonYears;
     const horizonMonths = Math.min(years * 12, tm);
 
-    // Sell: down = ownCash + apartment value. Keep: down = ownCash.
-    const sellDown = Math.min(state.ownCash + ap.currentValue, state.propertyPrice);
-    const keepDown = Math.min(state.ownCash, state.propertyPrice);
+    // Down payment comes from the scenario you're viewing (keeps this tab consistent
+    // with the Mortgage tab). Keep: that down payment. Sell: that + the apartment's value.
+    const scDown = round2(state.propertyPrice * sc.downPaymentPct / 100);
+    const keepDown = Math.min(scDown, state.propertyPrice);
+    const sellDown = Math.min(scDown + ap.currentValue, state.propertyPrice);
     const sellLoan = Math.max(0, round2(state.propertyPrice - sellDown));
     const keepLoan = Math.max(0, round2(state.propertyPrice - keepDown));
 
@@ -1185,7 +1200,14 @@ if (typeof globalThis !== 'undefined') {
     const sellNet = -(sellCum.interest) - sellCum.remaining;
     const keepNet = cumRent + appreciation - keepCum.interest - keepCum.remaining;
 
-    const pills = `<div class="pills">${[2, 5, 10, 15, 20].map(y => `<button class="pill ${y === years ? 'active' : ''}" data-horizon="${y}">${y} yr</button>`).join('')}</div>`;
+    const pills = `
+      <p class="section-hint" style="margin:0 0 10px">
+        Should you <b>keep</b> your ${money(ap.currentValue)} apartment (and earn rent + appreciation) or <b>sell</b> it to cut this home loan by ${money(ap.currentValue)}?
+        The answer depends only on the apartment's value, your <b>loan rate (${rate}%)</b>, and the rent/growth it earns — <b>not</b> on which down-payment scenario you pick.
+        <span style="color:var(--text-faint)">(The loan figures below use your selected "${escapeHtml(sc.name)}" scenario at ${sc.downPaymentPct}% down, but the verdict stays the same for any scenario.)</span>
+        Pick the time horizon:
+      </p>
+      <div class="pills">${[2, 5, 10, 15, 20].map(y => `<button class="pill ${y === years ? 'active' : ''}" data-horizon="${y}">${y} yr</button>`).join('')}</div>`;
 
     const summary = `
       <div class="panel-box">
@@ -1295,11 +1317,11 @@ if (typeof globalThis !== 'undefined') {
     // yearly comparison
     let yearlyTable = '';
     if (plan.enabled && r.hasPrepay) {
-      const targetYears = [1, 2, 5, 10, 15, 20].filter(y => y <= Math.ceil(termMonths() / 12));
+      const targetYears = [1, 2, 5, 10, 15, 20].filter(y => y <= Math.ceil(termMonths(sc) / 12));
       const baseByYear = cumByYearMap(r.baseRows);
       const prepayByYear = cumByYearMap(r.rows);
       const rows = targetYears.map(y => {
-        const month = Math.min(y * 12, termMonths());
+        const month = Math.min(y * 12, termMonths(sc));
         const nb = closingAtMonth(r.baseRows, month);
         const pb = closingAtMonth(r.rows, month);
         const baseInt = baseByYear(month);
@@ -1317,7 +1339,40 @@ if (typeof globalThis !== 'undefined') {
         </div>`;
     }
 
-    document.getElementById('tab-extra').innerHTML = settings + impact + yearlyTable;
+    // prepay vs invest
+    let investPanel = '';
+    if (plan.enabled && r.hasPrepay) {
+      const inv = state.invest;
+      const pv = computePrepayVsInvest(sc, r);
+      const diff = pv.investNet - pv.prepayNet;
+      const investWins = diff > 0;
+      const horizon = pv.horizonYears.toFixed(0);
+      investPanel = `
+        <div class="panel-box">
+          <h3>Or invest it instead? <span class="hint">— prepay the loan vs put the same money in a world index</span></h3>
+          <div class="kpi-grid" style="margin-bottom:12px">
+            <div class="kpi" style="padding:9px 11px"><div class="k-label">Expected return %/yr</div><input type="number" id="invReturn" value="${inv.returnPct}" step="0.5" style="margin-top:6px" /><div class="k-sub">world ≈7% · S&amp;P 500 ≈10% — an assumption, not a promise</div></div>
+            <div class="kpi" style="padding:9px 11px"><div class="k-label">Fund fee %/yr</div><input type="number" id="invFee" value="${inv.feePct}" step="0.05" style="margin-top:6px" /><div class="k-sub">world ETF ≈0.2%</div></div>
+            <div class="kpi" style="padding:9px 11px"><div class="k-label">Capital-gains tax %</div><input type="number" id="invCgt" value="${inv.cgtPct}" step="1" style="margin-top:6px" /><div class="k-sub">charged once on total gains at withdrawal; Estonia ≈22%. Deferral is already modelled (untaxed until the horizon).</div></div>
+          </div>
+          <div class="two-col">
+            <div>
+              <div class="stat-line"><span>Prepay the loan</span><span class="v">${money(pv.prepayNet)}</span></div>
+              <div class="stat-line"><span>Invest the same money</span><span class="v">${money(pv.investNet)}</span></div>
+              <div class="stat-line"><span style="color:var(--text-faint)">net worth after ${horizon}y (loan paid off in both)</span><span></span></div>
+            </div>
+            <div>
+              <div class="verdict" style="margin:0;padding:13px">
+                <div class="big ${investWins ? 'keep' : 'sell'}" style="font-size:24px">${investWins ? 'Invest' : 'Prepay'} wins by ${money(Math.abs(diff))}</div>
+                <div class="breakeven">Investing only wins if the index returns more than <strong class="num">${pv.breakEven == null ? 'n/a' : pv.breakEven.toFixed(1) + '%/yr'}</strong> (after the ${inv.feePct}% fee). Below that, prepaying wins.</div>
+                <div class="breakeven">Remember: prepaying is a <b>guaranteed ${contractRate()}%</b> return; the index figure is an <b>assumption</b> and real markets swing — some years are deeply negative.</div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    document.getElementById('tab-extra').innerHTML = settings + impact + investPanel + yearlyTable;
     wireExtraTab(sc);
   }
 
@@ -1351,6 +1406,55 @@ if (typeof globalThis !== 'undefined') {
     return last;
   }
   function fmtMonths(m) { return Math.floor(m / 12) + 'y ' + (m % 12) + 'm'; }
+
+  /* ---- Prepay vs invest (fair equal-cash comparison) ----
+     Both strategies commit the SAME cash each month (scheduled mortgage payment + the
+     chosen extra). Prepay: extra goes to the loan, paying it off early, then the freed
+     payment is invested to the horizon. Invest: extra goes to a world index from day one,
+     loan runs full term. At the horizon (original payoff) both have a €0 loan, so we just
+     compare the two investment pots. */
+  function fvMonthly(contribs, annualPct) {
+    const r = annualPct / 100 / 12;
+    let bal = 0;
+    for (let i = 0; i < contribs.length; i++) bal = bal * (1 + r) + contribs[i];
+    return bal;
+  }
+  function afterTax(pot, contributed, cgtPct) {
+    const gain = pot - contributed;
+    return gain > 0 ? pot - gain * cgtPct / 100 : pot;
+  }
+  function computePrepayVsInvest(sc, r) {
+    const start = startDateObj();
+    const tm = termMonths(sc);
+    const H = r.baseRows.length;                       // original payoff month (full term)
+    const extras = buildExtraPayments(sc.prepaymentPlan, tm, start);
+    const extraMap = {}; extras.forEach(e => { extraMap[e.monthIndex] = (extraMap[e.monthIndex] || 0) + e.amount; });
+    const contribA = [], contribB = [];               // A = prepay path, B = invest path
+    for (let m = 1; m <= H; m++) {
+      const Pb = r.baseRows[m - 1] ? r.baseRows[m - 1].scheduledPayment : 0;
+      const E = extraMap[m] || 0;
+      const budget = Pb + E;                            // identical monthly cash in both paths
+      const rowA = r.rows[m - 1];
+      const cashA = rowA ? (rowA.scheduledPayment + rowA.extraPayment + rowA.prepaymentFee) : 0;
+      contribA.push(Math.max(0, budget - cashA));       // prepay path invests only freed cash (after early payoff)
+      contribB.push(E);                                 // invest path puts the extra in the index throughout
+    }
+    const inv = state.invest;
+    const totA = contribA.reduce((a, b) => a + b, 0), totB = contribB.reduce((a, b) => a + b, 0);
+    const diffAt = (grossPct) => {
+      const rn = grossPct - inv.feePct;
+      return afterTax(fvMonthly(contribB, rn), totB, inv.cgtPct) - afterTax(fvMonthly(contribA, rn), totA, inv.cgtPct);
+    };
+    const prepayNet = afterTax(fvMonthly(contribA, inv.returnPct - inv.feePct), totA, inv.cgtPct);
+    const investNet = afterTax(fvMonthly(contribB, inv.returnPct - inv.feePct), totB, inv.cgtPct);
+    let breakEven = null;
+    if (diffAt(0) < 0 && diffAt(40) > 0) {
+      let lo = 0, hi = 40;
+      for (let i = 0; i < 60; i++) { const mid = (lo + hi) / 2; if (diffAt(mid) > 0) hi = mid; else lo = mid; }
+      breakEven = (lo + hi) / 2;
+    }
+    return { prepayNet, investNet, totInvested: totB, horizonYears: H / 12, breakEven };
+  }
 
   /* =============================== CSV =============================== */
   function downloadCSV(r) {
@@ -1391,14 +1495,14 @@ if (typeof globalThis !== 'undefined') {
   function snapshot() {
     return {
       v: 1, country: state.countryCode, theme: state.theme,
-      price: state.propertyPrice, cash: state.ownCash, term: state.termYears,
+      price: state.propertyPrice, cash: state.ownCash,
       bench: state.benchmarkRatePct, margin: state.bankMarginPct,
       income: state.netMonthlyIncome, debts: state.otherMonthlyDebts,
       start: state.loanStartDate, costs: state.costs, apt: state.apartment,
-      horizon: state.horizonYears,
+      horizon: state.horizonYears, invest: state.invest,
       active: state.scenarios.findIndex(s => s.id === state.activeScenarioId),
       scenarios: state.scenarios.map(s => ({
-        name: s.name, down: s.downPaymentPct, guar: s.useGuaranteeMode,
+        name: s.name, down: s.downPaymentPct, term: s.termYears, guar: s.useGuaranteeMode,
         useApt: s.useApartmentProceeds, hol: s.repaymentHolidayMonths, plan: s.prepaymentPlan,
       })),
     };
@@ -1412,7 +1516,6 @@ if (typeof globalThis !== 'undefined') {
       const c = activeCountry();
       if (o.price != null) state.propertyPrice = Math.max(0, +o.price);
       if (o.cash != null) state.ownCash = Math.max(0, +o.cash);
-      if (o.term != null) state.termYears = clamp(Math.round(+o.term), 1, c.maxTermYears);
       if (o.bench != null) state.benchmarkRatePct = Math.max(0, +o.bench);
       if (o.margin != null) state.bankMarginPct = Math.max(0, +o.margin);
       if (o.income != null) state.netMonthlyIncome = Math.max(0, +o.income);
@@ -1420,11 +1523,13 @@ if (typeof globalThis !== 'undefined') {
       if (typeof o.start === 'string') state.loanStartDate = o.start;
       if (o.costs && typeof o.costs === 'object') Object.assign(state.costs, o.costs);
       if (o.apt && typeof o.apt === 'object') Object.assign(state.apartment, o.apt);
+      if (o.invest && typeof o.invest === 'object') Object.assign(state.invest, o.invest);
       if (o.horizon != null) state.horizonYears = +o.horizon;
       if (Array.isArray(o.scenarios) && o.scenarios.length) {
         state.scenarios = o.scenarios.slice(0, 8).map(s => ({
           id: uid(), name: String(s.name || 'Scenario'),
           downPaymentPct: clamp(+s.down || 15, 0, 50),
+          termYears: clamp(Math.round(+s.term || c.defaultTermYears), 1, c.maxTermYears),
           useGuaranteeMode: !!s.guar, useApartmentProceeds: !!s.useApt,
           repaymentHolidayMonths: Math.max(0, Math.round(+s.hol || 0)),
           prepaymentPlan: Object.assign(defaultPlan(c), s.plan || {}),
@@ -1482,7 +1587,6 @@ if (typeof globalThis !== 'undefined') {
     const c = COUNTRIES.find(x => x.code === code);
     if (!c) return;
     state.countryCode = code;
-    state.termYears = c.defaultTermYears;
     state.benchmarkRatePct = c.defaultBenchmarkRatePct;
     state.bankMarginPct = c.defaultMarginPct;
     state.scenarios = defaultScenarios(c);
@@ -1497,7 +1601,6 @@ if (typeof globalThis !== 'undefined') {
     bind('propertyPrice', v => { state.propertyPrice = num(v, state.propertyPrice); });
     bind('propertyPriceRange', v => { state.propertyPrice = num(v, state.propertyPrice); });
     bind('ownCash', v => { state.ownCash = Math.max(0, num(v)); });
-    bind('termYearsRange', v => { state.termYears = clamp(Math.round(num(v, 1)), 1, activeCountry().maxTermYears); });
     bind('benchmarkRatePct', v => { state.benchmarkRatePct = Math.max(0, num(v)); });
     bind('bankMarginPct', v => { state.bankMarginPct = Math.max(0, num(v)); });
     bind('netMonthlyIncome', v => { state.netMonthlyIncome = Math.max(0, num(v)); });
@@ -1526,7 +1629,7 @@ if (typeof globalThis !== 'undefined') {
     document.getElementById('addScenarioBtn').onclick = () => {
       if (state.scenarios.length >= 8) return;
       const c = activeCountry();
-      const sc = { id: uid(), name: 'Scenario ' + (state.scenarios.length + 1), downPaymentPct: 20, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(c) };
+      const sc = { id: uid(), name: 'Scenario ' + (state.scenarios.length + 1), downPaymentPct: 20, termYears: c.defaultTermYears, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(c) };
       state.scenarios.push(sc);
       state.activeScenarioId = sc.id;
       render();
@@ -1551,21 +1654,22 @@ if (typeof globalThis !== 'undefined') {
         if (actBtn.dataset.act === 'clone' && state.scenarios.length < 8) {
           const copy = JSON.parse(JSON.stringify(sc)); copy.id = uid(); copy.name = sc.name + ' (copy)';
           const idx = state.scenarios.indexOf(sc); state.scenarios.splice(idx + 1, 0, copy); state.activeScenarioId = copy.id;
-        } else if (actBtn.dataset.act === 'delete' && state.scenarios.length > 3) {
+        } else if (actBtn.dataset.act === 'delete' && state.scenarios.length > 1) {
           state.scenarios = state.scenarios.filter(s => s.id !== sc.id);
           if (state.activeScenarioId === sc.id) state.activeScenarioId = state.scenarios[0].id;
         }
         render(); updateAddBtn(); return;
       }
       const card = e.target.closest('[data-sc]');
-      if (card && e.target.tagName !== 'INPUT') { state.activeScenarioId = card.dataset.sc; render(); }
+      if (card && !e.target.closest('input, label, button')) { state.activeScenarioId = card.dataset.sc; render(); }
     });
     list.addEventListener('input', e => {
       const t = e.target;
       const sc = state.scenarios.find(s => s.id === t.dataset.sc); if (!sc) return;
       if (t.classList.contains('sc-name')) { sc.name = t.value; renderMortgageTab(); renderComparisonTab(); renderExtraTab(); }
       else if (t.classList.contains('sc-down')) { sc.downPaymentPct = num(t.value); render(); }
-      else if (t.classList.contains('sc-holiday-months')) { sc.repaymentHolidayMonths = clamp(Math.round(num(t.value)), 0, termMonths() - 1); render(); }
+      else if (t.classList.contains('sc-term')) { sc.termYears = clamp(Math.round(num(t.value, 1)), 1, activeCountry().maxTermYears); render(); }
+      else if (t.classList.contains('sc-holiday-months')) { sc.repaymentHolidayMonths = clamp(Math.round(num(t.value)), 0, termMonths(sc) - 1); render(); }
     });
     list.addEventListener('change', e => {
       const t = e.target;
@@ -1606,6 +1710,9 @@ if (typeof globalThis !== 'undefined') {
     on('exMonth', 'change', e => { plan.paymentMonth = parseInt(e.target.value, 10); render(); });
     on('exStrategy', 'change', e => { plan.strategy = e.target.value; render(); });
     on('exFee', 'input', e => { plan.feePct = Math.max(0, num(e.target.value)); render(); });
+    on('invReturn', 'input', e => { state.invest.returnPct = Math.max(0, num(e.target.value)); render(); });
+    on('invFee', 'input', e => { state.invest.feePct = Math.max(0, num(e.target.value)); render(); });
+    on('invCgt', 'input', e => { state.invest.cgtPct = clamp(num(e.target.value), 0, 100); render(); });
 
     const tab = document.getElementById('tab-extra');
     tab.querySelectorAll('.cs-year').forEach(el => el.addEventListener('input', e => { plan.customSchedule[+e.target.dataset.i].year = clamp(Math.round(num(e.target.value, 1)), 1, 40); render(); }));
