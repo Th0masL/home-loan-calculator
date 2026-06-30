@@ -72,5 +72,17 @@ check('LTV 90% ok with guarantee', ltvGuar.status !== 'fail', true);
 const dsti = E.checkDSTI(1000, 0, 3500, 0.50);
 check('DSTI ~28.6% ok', dsti.status, 'ok');
 
+// ---- France config: HCSF taux d'effort regime (no LTV cap, no stress test) ----
+check('France registered', E.COUNTRIES.some(c => c.code === 'FR'), true);
+check('France maxDSTI 35%', E.France.maxDSTI, 0.35);
+check('France no stress test', E.France.hasStressTest, false);
+check('France max term 25y', E.France.maxTermYears, 25);
+check('France no guarantee scheme', E.France.maxLTVWithGuarantee == null, true);
+// France stress = contract rate (no floor) when hasStressTest is false
+const frStress = E.checkStress(270000, 3.34, 240, 0, 4500, E.France.stressRateFloor, E.France.maxDSTI, E.France.hasStressTest);
+check('France stress rate = contract rate', frStress.stressRate, 3.34);
+// Worked example: €300k / 20y / 3.34% fixed ≈ €1,715/mo (Perplexity's ~€1,733 was approximate)
+check('France worked example monthly', E.round2(E.monthlyPayment(300000, 3.34, 240)), 1715.32);
+
 console.log(`\n${fail === 0 ? '✅ ALL PASSED' : '❌ FAILURES'} — ${pass} passed, ${fail} failed`);
 process.exit(fail === 0 ? 0 : 1);

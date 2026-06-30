@@ -579,7 +579,28 @@ const Finland = {
   ],
 };
 
-const COUNTRIES = [Estonia, Finland];
+const France = {
+  code: 'FR', name: 'France', flag: '🇫🇷', currency: 'EUR', currencySymbol: '€',
+  maxLTV: 0.90,                 // no statutory cap; ~10% apport (notary fees) is the usual bank norm
+  // no maxLTVWithGuarantee / guaranteeName — PTZ is a separate interest-free top-up loan, not an LTV relaxation
+  maxDSTI: 0.35, stressRateFloor: 0, hasStressTest: false,   // HCSF taux d'effort cap; no stress floor
+  maxTermYears: 25, defaultTermYears: 20,
+  defaultBenchmarkRatePct: 3.34, defaultMarginPct: 0, benchmarkRateLabel: 'Fixed rate',
+  defaultEarlyRepaymentFeePct: 0,
+  csvDelimiter: ';', csvThousandsSep: ' ', csvDecimalSep: ',', dateFormat: 'DD/MM/YYYY',
+  regulatoryNotes: [
+    "Affordability: taux d'effort ≤ 35% of net monthly income, including borrower insurance — HCSF",
+    "No statutory loan-to-value cap; ~10% down (apport) is the usual bank norm to cover notary fees (≈7–8% existing, ≈2–3% new). The 90% shown here is bank practice, not law.",
+    "Maximum loan maturity 25 years (27 for new-build/VEFA with deferred start) — HCSF",
+    "No interest-rate stress test; the 35% taux d'effort is the binding prudential rule",
+    "Predominantly fixed-rate; the APR (TAEG) is capped by the quarterly taux d'usure (5.19% for 20y+ from 1 Apr 2026)",
+    "Early repayment penalty (IRA) is capped at the lower of 6 months' interest on the repaid sum or 3% of outstanding capital — often waived, with statutory exemptions (sale on job relocation, death, job loss)",
+    "Borrower insurance (assurance emprunteur) is effectively mandatory (~0.1–0.4%/yr) and counts toward the 35% taux d'effort — not yet modelled in this tool",
+    "First-time buyers may add a PTZ (interest-free loan) covering part of a new-build purchase — not modelled here",
+  ],
+};
+
+const COUNTRIES = [Estonia, Finland, France];
 
 /* ---- Numeric helpers ---- */
 function round2(x) { return Math.round((x + Number.EPSILON) * 100) / 100; }
@@ -764,7 +785,7 @@ function checkStress(loanAmount, annualRatePct, termMonths, otherDebts, netIncom
 /* Expose for the node test harness (no effect in the browser). */
 if (typeof globalThis !== 'undefined') {
   globalThis.LoanEngine = {
-    Estonia, Finland, COUNTRIES, round2, monthlyPayment, amortize, scheduleTotals,
+    Estonia, Finland, France, COUNTRIES, round2, monthlyPayment, amortize, scheduleTotals,
     cumulativeAt, buildExtraPayments, loanMonthForCalendar, addMonths, formatDate,
     checkLTV, checkDSTI, checkStress,
   };
@@ -797,12 +818,22 @@ if (typeof globalThis !== 'undefined') {
 
   function defaultScenarios(country) {
     const minPct = Math.round((1 - country.maxLTV) * 100);
-    const minGuarPct = country.maxLTVWithGuarantee ? Math.round((1 - country.maxLTVWithGuarantee) * 100) : minPct;
     const t = country.defaultTermYears;
+    const mk = (name, down, guar) => ({ id: uid(), name, downPaymentPct: down, termYears: t, useGuaranteeMode: !!guar, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) });
+    if (country.maxLTVWithGuarantee && country.guaranteeName) {
+      const minGuarPct = Math.round((1 - country.maxLTVWithGuarantee) * 100);
+      return [
+        mk(`Standard (${minPct}%)`, minPct, false),
+        mk(`${country.guaranteeName} (${minGuarPct}%)`, minGuarPct, true),
+        mk('Larger down (20%)', 20, false),
+      ];
+    }
+    // No low-down-payment guarantee scheme (e.g. France): three down-payment levels.
+    const mid = Math.max(minPct + 5, 15);
     return [
-      { id: uid(), name: `Standard (${minPct}%)`, downPaymentPct: minPct, termYears: t, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
-      { id: uid(), name: `${country.guaranteeName || 'Guarantee'} (${minGuarPct}%)`, downPaymentPct: minGuarPct, termYears: t, useGuaranteeMode: true, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
-      { id: uid(), name: 'Larger down (20%)', downPaymentPct: 20, termYears: t, useGuaranteeMode: false, useApartmentProceeds: false, repaymentHolidayMonths: 0, prepaymentPlan: defaultPlan(country) },
+      mk(`Standard (${minPct}%)`, minPct, false),
+      mk(`${mid}% down`, mid, false),
+      mk('Larger down (20%)', 20, false),
     ];
   }
 

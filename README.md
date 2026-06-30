@@ -71,8 +71,11 @@ The app is country-agnostic. Every country-specific rule (LTV/DSTI limits, stres
 rate defaults, CSV/date/number formats, regulatory notes) lives in one config object. The
 engine and UI read from `activeCountry` and never hard-code country values.
 
-Ships with **🇪🇪 Estonia** and **🇫🇮 Finland**. To add a country, add one config object to the
-`COUNTRIES` array in the `<script id="engine">` block — no engine or UI changes needed:
+Ships with **🇪🇪 Estonia**, **🇫🇮 Finland**, and **🇫🇷 France**. France is a different regime
+(no statutory LTV cap, no stress test — the binding rule is the HCSF *taux d'effort* ≤ 35%
+and a 25-year max term, with fixed-rate loans), which the same config shape handles. To add a
+country, add one config object to the `COUNTRIES` array in the `<script id="engine">` block —
+no engine or UI changes needed:
 
 ```js
 const Latvia = {
